@@ -1,7 +1,7 @@
 import sys, os
 import numpy as np
 import ROOT 
-sys.path.append('modules/')
+sys.path.append("/home/diego/KITPlot/modules")
 from KITData import KITData
 
 
@@ -29,15 +29,21 @@ else:
 
 # make ID list from ID to ID
 for i in range(int(x),(int(y)+1)):
-    IDList.append(str(i))
-
+    IDList.append(int(i))
 
 # start search
 for ID in IDList:
     try:
-        dataList.append(KITData(int(ID),measurement="alibava"))
+        dataList.append(KITData(ID,measurement="alibava"))
+    except (ValueError) as e:
+        sys.exit(e)
     except:
         pass
+
+if dataList == []:
+    raise ValueError("Couldn't find data that met the requirements")
+else:
+    pass
 
 Name = dataList[0].getName()
 
@@ -72,11 +78,13 @@ for kData in dataList:
     else:
         pass
 
+
 if searchList == []:
     raise ValueError("Couldn't find data that met the requirements")
 else:
     for foo in searchList:
         print foo
+
 
 path = os.getcwd() + "/"
 try:
