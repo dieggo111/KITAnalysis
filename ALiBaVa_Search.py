@@ -4,7 +4,7 @@ import ROOT
 sys.path.append("/home/diego/KITPlot/modules")
 from KITData import KITData
 
-
+cfgPath = "/home/diego/KITPlot/"
 IDList = []
 dataList = []
 searchList = []
@@ -34,7 +34,7 @@ for i in range(int(x),(int(y)+1)):
 # start search
 for ID in IDList:
     try:
-        dataList.append(KITData(ID,measurement="alibava"))
+        dataList.append(KITData(ID,measurement="alibava",db=cfgPath))
     except (ValueError) as e:
         sys.exit(e)
     except:
