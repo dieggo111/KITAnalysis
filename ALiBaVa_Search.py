@@ -34,16 +34,18 @@ for i in range(int(x),(int(y)+1)):
 # start search
 for ID in IDList:
     try:
-        dataList.append(KITData(ID,measurement="alibava",db=cfgPath))
+        dataList.append(KITData(ID,measurement="alibava",db=cfgPath,show_input="False"))
     except (ValueError) as e:
         sys.exit(e)
     except:
         pass
 
 if dataList == []:
-    raise ValueError("Couldn't find data that met the requirements")
+    raise ValueError("Can't find complete runs in between {0} and [1}".format(x,y))
 else:
     pass
+
+print "Search completed..."
 
 Name = dataList[0].getName()
 
@@ -64,7 +66,7 @@ for kData in dataList:
                 pass
 
     elif Name == kData.getName() and para == "Annealing":
-        if int(val) in range(int(abs(round(kData.getZ()[0]))-3),int(abs(round(kData.getZ()[0]))+3)) and Name == kData.getName():
+        if int(val) in range(int(abs(round(kData.getZ()[0]/24*0.8))),int(abs(round(kData.getZ()[0]/24*1.1)))) and Name == kData.getName():
             try:
                 if kData.getGain() == 1.0:
                     Seed = 220*kData.getSeed()
