@@ -1,6 +1,5 @@
 import sys, os
 import numpy as np
-import ROOT 
 sys.path.append("/home/diego/KITPlot/modules")
 from KITData import KITData
 
@@ -45,7 +44,7 @@ if dataList == []:
 else:
     pass
 
-print "Search completed..."
+print("Search completed...")
 
 Name = dataList[0].getName()
 
@@ -85,7 +84,7 @@ if searchList == []:
     raise ValueError("Couldn't find data that met the requirements")
 else:
     for foo in searchList:
-        print foo
+        print(foo)
 
 
 path = os.getcwd() + "/"
@@ -95,13 +94,13 @@ try:
             for line in searchList:
                 File.write(str(line[3]) + "   " + str(line[4]) + "\n")
         File.close()
-        print "Data written into %s" %(str(dataList[0].getName() + ".txt"))
+        print("Data written into %s") %(str(dataList[0].getName() + ".txt"))
     elif sys.argv[3] == "-vs":
         with open(path + str(dataList[0].getName() + ".txt"), 'w') as File:
             for line in searchList:
                 File.write(str(line[2]) + "   " + str(line[4]) + "\n")
         File.close()
-        print "Data written into %s" %(str(dataList[0].getName() + ".txt"))
+        print ("Data written into %s") %(str(dataList[0].getName() + ".txt"))
 except:
     pass
 
