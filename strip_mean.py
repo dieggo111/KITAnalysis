@@ -60,8 +60,8 @@ class strip_mean(object):
 
             fileOutput = self.calc(file1,self.min_val_user,self.max_val_user)
 
-            print "(" + str(len(file1.getY())-fileOutput[0]) + ") of (" + str(len(file1.getY())) + ") data points excluded"
-            print str(file1.getName())+"_"+str(file1.getParaY())+" = "+str(fileOutput[1])+" ;   "+str(fileOutput[2])+";"
+            print("(" + str(len(file1.getY())-fileOutput[0]) + ") of (" + str(len(file1.getY())) + ") data points excluded")
+            print(str(file1.getName())+"_"+str(file1.getParaY())+" = "+str(fileOutput[1])+" ;   "+str(fileOutput[2])+";")
 
         # files with IDs 
         elif self.Input[-4:] == ".txt":
@@ -72,7 +72,7 @@ class strip_mean(object):
                         self.fileList.append(KITData.KITData(entry[0],db=self.cfgPath))
 
             for i, data in enumerate(self.fileList):
-                print str(self.fileList[i].getName())+"_"+str(self.fileList[i].getParaY())+" = "+str(np.mean(self.fileList[i].getY()))+" +/- "+str(np.std(self.fileList[i].getY()))
+                print(str(self.fileList[i].getName())+"_"+str(self.fileList[i].getParaY())+" = "+str(np.mean(self.fileList[i].getY()))+" +/- "+str(np.std(self.fileList[i].getY())))
 
         return True
 
@@ -153,7 +153,7 @@ class strip_mean(object):
                     File.write("{:>15} {:>20} {:>20}".format(str(self.fileList[i].getParaY())+";",str(np.mean(self.fileList[i].getY()))+";",str(np.std(self.fileList[i].getY())))+";" +"\n")
             File.close()
         else:
-            print "?"
+            print("?")
 
         return True
 
