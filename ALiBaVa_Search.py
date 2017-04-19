@@ -1,7 +1,7 @@
 import sys, os
 import numpy as np
-sys.path.append("/home/diego/KITPlot/modules")
-from KITData import KITData
+sys.path.append("/home/diego/KITPlot")
+from KITPlot import KITData
 
 cfgPath = "/home/diego/KITPlot/"
 IDList = []
@@ -33,21 +33,22 @@ for i in range(int(x),(int(y)+1)):
 # start search
 for ID in IDList:
     try:
-        dataList.append(KITData(ID,measurement="alibava",db=cfgPath,show_input="False"))
+            dataList.append(KITData(ID,measurement="alibava",show_input=False))
     except (ValueError) as e:
         sys.exit(e)
     except:
         pass
 
 if dataList == []:
-    raise ValueError("Can't find complete runs in between {0} and [1}".format(x,y))
+    raise ValueError("Can't find complete runs in between {0} and {1}".format(x,y))
 else:
     pass
 
 print("Search completed...")
 
 Name = dataList[0].getName()
-
+# print(dataList[0].getName(),dataList[0].getX(),dataList[0].getZ())
+# print(para)
 # check if search value is satisfied
 for kData in dataList:
     if Name == kData.getName() and para == "Voltage":
@@ -65,7 +66,8 @@ for kData in dataList:
                 pass
 
     elif Name == kData.getName() and para == "Annealing":
-        if int(val) in range(int(abs(round(kData.getZ()[0]/24*0.8))),int(abs(round(kData.getZ()[0]/24*1.1)))) and Name == kData.getName():
+        if (int(val) in range(int(abs(round(kData.getZ()[0]/24*0.8))),int(abs(round(kData.getZ()[0]/24*1.1)))) and Name == kData.getName()) or int(val) == 0:
+
             try:
                 if kData.getGain() == 1.0:
                     Seed = 220*kData.getSeed()
@@ -94,44 +96,12 @@ try:
             for line in searchList:
                 File.write(str(line[3]) + "   " + str(line[4]) + "\n")
         File.close()
-        print("Data written into %s") %(str(dataList[0].getName() + ".txt"))
+        print("Data written into %s" %(str(dataList[0].getName() + ".txt")))
     elif sys.argv[3] == "-vs":
         with open(path + str(dataList[0].getName() + ".txt"), 'w') as File:
             for line in searchList:
                 File.write(str(line[2]) + "   " + str(line[4]) + "\n")
         File.close()
-        print ("Data written into %s") %(str(dataList[0].getName() + ".txt"))
+        print ("Data written into %s" %(str(dataList[0].getName() + ".txt")))
 except:
     pass
-
-
-
-#    kData = KITData(sys.argv[1],measurement="alibava")
-
-#    print "{:>15} {:>20}".format("Name:" , kData.getName())
-#    print "{:>15} {:>20}".format("Voltage:" , str(kData.getX()))
-##    print "{:>15} {:>20}".format("Fluence:" , str(kData.getFluenceP()))
-#    print "{:>15} {:>20}".format("Annealing (hours):" , str(kData.getZ()))
-#    print "{:>15} {:>20}".format("Annealing (days):" , str(kData.getZ()[0]/24))
-#    if kData.getGain() == 1.0 or kData.getGain() == None:
-#        print "{:>15} {:>20}".format("Gain:" , str(220))
-#    else:
-#        print "{:>15} {:>20}".format("Gain:" , str(kData.getGain()))
-#    print "{:>15} {:>20}".format("Seed (ADC):" , str(kData.getSeed()))
-#    if kData.getGain() == 1.0 or kData.getGain() == None:
-#        print "{:>15} {:>20}".format("Seed err (e):" , str(220*kData.getSeederr()))
-#        print "{:>15} {:>20}".format("Seed (e):" , str(220*kData.getSeed()))
-#    else:
-#        print "{:>15} {:>20}".format("Seed err (e):" , str(kData.getGain()*kData.getSeederr()))
-#        print "{:>15} {:>20}".format("Seed (e):" , str(kData.getGain()*kData.getSeed()))
-
-
-
-#    if len(sys.argv) > 2 and sys.argv[2].isdigit():
-#        print "{:>15} {:>20}".format("Seed* (e):" , str(int(sys.argv[2])*kData.getSeed()))
-#        print "{:>15} {:>20}".format("Seed err* (e):" , str(int(sys.argv[2])*kData.getSeederr()))
-
-
-
-
-raw_input()

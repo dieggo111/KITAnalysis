@@ -4,10 +4,15 @@ sys.path.append("/home/diego/KITPlot/")
 from KITPlot import KITData
 
 
-"""The strip_mean script calculates the mean value of strip parameters directly from the IEKP database. You can either choose
+"""The strip_mean script calculates the mean value of strip parameters directly
+from the IEKP database. You can either choose
     - a single probe ID
     - a .txt file containing probe IDs
-as your 'Input' argument to calculate mean value and its standard error. For adjusting those mean values you are able to set boundaries. Every data point that is outside the given interval will be excluded from the calculation. You can also choose to print the results in a seperate .txt-file with the 'write' method.
+as your 'Input' argument to calculate mean value and its standard error. For
+adjusting those mean values you are able to set boundaries. Every data point
+that is outside the given interval will be excluded from the calculation. You
+can also choose to print the results in a seperate .txt-file with the 'write'
+method.
 """
 
 class strip_mean(object):
@@ -60,8 +65,10 @@ class strip_mean(object):
 
             fileOutput = self.calc(file1,self.min_val_user,self.max_val_user)
 
-            print("(" + str(len(file1.getY())-fileOutput[0]) + ") of (" + str(len(file1.getY())) + ") data points excluded")
-            print(str(file1.getName())+"_"+str(file1.getParaY())+" = "+str(fileOutput[1])+" ;   "+str(fileOutput[2])+";")
+            print("(" + str(len(file1.getY())-fileOutput[0]) + ") of ("
+                  + str(len(file1.getY())) + ") data points excluded")
+            print(str(file1.getName()) + "_" + str(file1.getParaY()) + " = "
+                  + str(fileOutput[1]) + " ;   " + str(fileOutput[2]) + ";")
 
         # files with IDs
         elif self.Input[-4:] == ".txt":
@@ -69,10 +76,13 @@ class strip_mean(object):
                 for line in inputFile:
                     entry = line.split()
                     if entry[0].isdigit():
-                        self.fileList.append(KITData.KITData(entry[0]))
+                        self.fileList.append(KITData(entry[0]))
 
             for i, data in enumerate(self.fileList):
-                print(str(self.fileList[i].getName())+"_"+str(self.fileList[i].getParaY())+" = "+str(np.mean(self.fileList[i].getY()))+" +/- "+str(np.std(self.fileList[i].getY())))
+                print(str(self.fileList[i].getName()) + "_"
+                      + str(self.fileList[i].getParaY()) + " = "
+                      + str(np.mean(self.fileList[i].getY())) + " +/- "
+                      + str(np.std(self.fileList[i].getY())))
 
         return True
 
@@ -115,7 +125,8 @@ class strip_mean(object):
                         else:
                             pass
                     else:
-                        raise ValueError("Unkown sensor. Need boundaries as second and third argument...")
+                        raise ValueError("Unkown sensor. Need boundaries as "
+                                         "second and third argument...")
                 elif "C_int" in Data.getParaY():
                     if "Irradiation" in Data.getName() or "PCommon" in Data.getName():
                         if self.min_val_cint<val<self.max_val_cint:
@@ -128,7 +139,8 @@ class strip_mean(object):
                         else:
                             pass
                     else:
-                        raise ValueError("Unkown sensor. Need boundaries as second and third argument...")
+                        raise ValueError("Unkown sensor. Need boundaries as "
+                                         "second and third argument...")
                 elif "R_poly" in Data.getParaY():
                     if self.min_val_poly<val<self.max_val_poly:
                         corrList.append(val)
