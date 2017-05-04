@@ -81,8 +81,8 @@ class strip_mean(object):
             for i, data in enumerate(self.fileList):
                 print(str(self.fileList[i].getName()) + "_"
                       + str(self.fileList[i].getParaY()) + " = "
-                      + str(np.mean(self.fileList[i].getY())) + " +/- "
-                      + str(np.std(self.fileList[i].getY())))
+                      + str(self.calc(self.fileList[i])[1]) + " +/- "
+                      + str(self.calc(self.fileList[i])[2]))
 
         return True
 
