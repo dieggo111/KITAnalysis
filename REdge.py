@@ -1,15 +1,19 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
+
 import sys, os
 import numpy as np
-import ROOT 
-sys.path.append('modules/')
-from KITData import KITData
+import ROOT
+sys.path.append("/home/diego/KITPlot/")
+from KITPlot import KITData
 from KITPlot import KITPlot
 
 
 
 def setFormat(path):
-    
+    """ Values in .txt file may be in german format that uses ',' instead of '.'
+        to seperate decimals. This needs to be corrected.
+    """
+
     Lines=[]
     with open (path, 'r') as File:
         for line in File:
@@ -22,8 +26,9 @@ def setFormat(path):
                 File.write(line)
     return True
 
+
 def getLists(path):
-    
+
     x=[]
     y=[]
     y2=[]
@@ -34,8 +39,9 @@ def getLists(path):
             y2.append(abs(float(line.split()[2])))
     return (x, y, y2)
 
+
 def average(List, minimum=None, maximum=None):
-    
+
     TempList=[]
 
     if minimum is not None and maximum is not None:
@@ -52,8 +58,13 @@ def average(List, minimum=None, maximum=None):
     else:
         return np.mean(List)
 
+
 def straighten(path):
-    
+
+    """ Some values in the .txt files may be corrupted due to bugs of the
+        measurement device. These values need to be deleted.
+    """
+
     Lines=[]
     I=[]
     LV=[]
@@ -92,29 +103,26 @@ def straighten(path):
                 pass
             else:
                 File.write(line)
+
     return True
 
 
 
 
 if __name__ == '__main__':
-                
+
 ###################
-    Redge = False #
+    Redge = True #
 ###################
 
     setFormat(sys.argv[1])
-    if Redge == True:
-        straighten(sys.argv[1])
-
-    else:
-        pass
-
-    kPlot1 = KITPlot(sys.argv[1])
 
     # Ramp measurements
     if Redge == True:
 
+        straighten(sys.argv[1])
+
+        kPlot1 = KITPlot(sys.argv[1])
         kPlot1.draw("APL")
 
         v = kPlot1.interpolate()
@@ -122,10 +130,10 @@ if __name__ == '__main__':
         for name, val in v:
             R.append((name, 1/val))
 
-        print "\n" + "Resistances:" + "\n"
+        print("\n" + "Resistances:" + "\n")
         for pair in R:
             name, val = pair
-            print "{:>8} {:>15}".format(name+": ", str(np.round(val)))
+            print("{:>8} {:>15}".format(name+": ", str(np.round(val))))
 
     # IV Diff
     else:
@@ -161,10 +169,9 @@ if __name__ == '__main__':
 
         for triplet in Vfit:
             e, f, g = triplet
-            print "{:>15} {:>15} {:>15}".format(str(e).replace(".",",")+" ; ", str(np.round(f,2)).replace(".",",")+" ; ", str(np.round(g,2)).replace(".",",")) 
-        print "\n" + "V_edge: " + str(np.round(average(Vedge), 2))
+            print("{:>15} {:>15} {:>15}".format(str(e).replace(".",",")+" ; ", str(np.round(f,2)).replace(".",",")+" ; ", str(np.round(g,2)).replace(".",",")))
+        print("\n" + "V_edge: " + str(np.round(average(Vedge), 2)))
 
 
 
-    raw_input()
-
+    input()
