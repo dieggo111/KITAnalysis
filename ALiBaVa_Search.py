@@ -1,9 +1,16 @@
 import sys, os
 import numpy as np
-sys.path.append("/home/diego/KITPlot")
+# Ubuntu
+# sys.path.append("/home/diego/KITPlot")
+# Win10
+sys.path.append("C:\\Users\\Marius\\KITPlot\\")
 from KITPlot import KITData
 
-cfgPath = "/home/diego/KITPlot/"
+# Ubuntu
+# path = "/home/diego/KITPlot/"
+# Win10
+path = "C:\\Users\\Marius\\KITPlot\\"
+
 IDList = []
 dataList = []
 searchList = []
@@ -47,9 +54,7 @@ else:
 print("Search completed...")
 
 Name = dataList[0].getName()
-# print(dataList[0].getName(),dataList[0].getX(),dataList[0].getZ())
-# print(para)
-# check if search value is satisfied
+
 for kData in dataList:
     if Name == kData.getName() and para == "Voltage":
         for volt in kData.getX():
@@ -58,8 +63,17 @@ for kData in dataList:
                     if kData.getGain() == 1.0:
                         Seed = 220*kData.getSeed()
                     else:
-                        Seed = kData.getGain()*kData.getSeed()
-                    searchList.append((str(kData.getName()),kData.getID(),abs(round(volt)),round(kData.getZ()[0]/24),round(Seed)))
+                        try:
+                            if "Gain=" in sys.argv[4]:
+                                Seed = int(sys.argv[4].split("=")[1])*kData.getSeed()
+                            else:
+                                pass
+                        except:
+                            Seed = kData.getGain()*kData.getSeed()
+
+                    searchList.append((str(kData.getName()),kData.getID(),
+                                       abs(round(volt)),round(kData.getGain()),
+                                       round(kData.getZ()[0]/24),round(Seed)))
                 except:
                      pass
             else:
@@ -85,22 +99,27 @@ for kData in dataList:
 if searchList == []:
     raise ValueError("Couldn't find data that met the requirements")
 else:
-    for foo in searchList:
-        print(foo)
+    if para == "Voltage":
+        print("{:<15} {:<15} {:<15} {:<15} {:<15} {:<15}"\
+              .format("SensorName","Run","Voltage","Gain","Annealing","SeedSignal"))
+        for foo in searchList:
+            print("{:<15} {:<15} {:<15} {:<15} {:<15} {:<15}"\
+                  .format(foo[0],foo[1],foo[2],foo[3],foo[4],foo[5]))
+    else:
+        pass
 
 
-path = os.getcwd() + "/"
 try:
     if sys.argv[3] == "-as":
         with open(path + str(dataList[0].getName() + ".txt"), 'w') as File:
             for line in searchList:
-                File.write(str(line[3]) + "   " + str(line[4]) + "\n")
+                File.write(str(line[4]) + "   " + str(line[5]) + "\n")
         File.close()
         print("Data written into %s" %(str(dataList[0].getName() + ".txt")))
     elif sys.argv[3] == "-vs":
         with open(path + str(dataList[0].getName() + ".txt"), 'w') as File:
             for line in searchList:
-                File.write(str(line[2]) + "   " + str(line[4]) + "\n")
+                File.write(str(line[2]) + "   " + str(line[5]) + "\n")
         File.close()
         print ("Data written into %s" %(str(dataList[0].getName() + ".txt")))
 except:
