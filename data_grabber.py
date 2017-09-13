@@ -9,12 +9,12 @@ from KITPlot import KITData
 class dataGrabber(object):
 
     def __init__(self):
+
         # Ubuntu
         # path = "/home/diego/KITPlot/"
         # Win10
-        self.path = "C:\\Users\\Marius\\KITPlot\\"
+        self.defaultPath = "C:\\Users\\Marius\\KITPlot\\"
 
-        self.__IDList = []
         self.__dataList = []
         self.__searchList = []
         self.__paraList = ["Voltage","Annealing"]
@@ -25,21 +25,16 @@ class dataGrabber(object):
 
         self.search_n_collect(runNr,searchItem,*args)
         self.output()
-        self.exportFile(*args)
 
         return self.__searchList
 
-    # runNr must look like "startNr-endNr"
-    # searchPara must look like "Para=Value"
+
     def search_n_collect(self,runNr,searchItem,*args):
+        """
+        runNr must look like "startNr-endNr"
+        searchPara must look like "Para=Value"
 
-        # check if default gain was set by user
-        try:
-            gain = [x for x in args if "gain" in x.lower()][0]
-            gain = int(gain.split("=")[1])
-        except:
-            gain = None
-
+        """
         # validate input (must be "ID-ID") and determine search parameter
         try:
             (startNr,endNr) = runNr.split("-")
@@ -57,18 +52,8 @@ class dataGrabber(object):
         else:
             pass
 
-        # make ID list from ID to ID
-        for i in range(int(startNr),(int(endNr)+1)):
-            self.__IDList.append(int(i))
-
-        # start search
-        for ID in self.__IDList:
-            try:
-                self.__dataList.append(KITData(ID,measurement="alibava",show_input=False))
-            except (ValueError) as e:
-                sys.exit(e)
-            except:
-                pass
+        # fill self.__dataList with kitdata files
+        self.fill_dataList(startNr,endNr)
 
         if self.__dataList == []:
             raise ValueError("Can't find complete runs in between {0} and {1}".format(startNr,endNr))
@@ -77,14 +62,25 @@ class dataGrabber(object):
 
         print("Search completed...")
 
-        Name = self.__dataList[0].getName()
+        # check if default name was set by user
+        try:
+            gain = [x for x in args if "gain" in x.lower()][0]
+            gain = int(gain.split("=")[1])
+        except:
+            gain = None
+
+        # check if sensor name was given by user
+        try:
+            name = [x for x in args if "name" in x.lower()][0]
+            name = name.split("=")[1]
+        except:
+            name = self.__dataList[0].getName()
 
         # fill self.__searchList
         for kData in self.__dataList:
-            if Name == kData.getName() and para == "Voltage":
+            if name == kData.getName() and para == "Voltage":
                 if int(val) in range(int(abs(round(kData.getX()[0]))-1),\
-                                     int(abs(round(kData.getX()[0]))+2)) \
-                                     and Name == kData.getName():
+                                     int(abs(round(kData.getX()[0]))+2)):
                     try:
                         # if it's an old Alibava measurement
                         if kData.getGain() == 1.0 and gain == None:
@@ -99,33 +95,30 @@ class dataGrabber(object):
                                 seed = kData.getGain()*kData.getSeed()
 
                         if kData.getGain() == seed/kData.getSeed():
-                            self.__searchList.append((str(kData.getName()),
-                                                      kData.getID(),
-                                                      abs(round(kData.getX()[0])),
-                                                      round(kData.getGain()),
-                                                      round(kData.getZ()[0]/24),
-                                                      round(seed)))
+                            self.__searchList.append({"Name" :          str(kData.getName()),
+                                                       "ID" :           str(kData.getID()),
+                                                       "Voltage" :      str(abs(round(kData.getX()[0]))),
+                                                       "Gain" :         str(round(kData.getGain())),
+                                                       "Annealing" :    str(round(kData.getZ()[0]/24)),
+                                                       "Seed" :         str(round(seed))})
                             gain = None
                         else:
-                            self.__searchList.append((str(kData.getName()),
-                                                      kData.getID(),
-                                                      abs(round(kData.getX()[0])),
-                                                      round(gain),
-                                                      round(kData.getZ()[0]/24),
-                                                      round(seed)))
+                            self.__searchList.append({"Name" :          str(kData.getName()),
+                                                       "ID" :           str(kData.getID()),
+                                                       "Voltage" :      str(abs(round(kData.getX()[0]))),
+                                                       "Gain" :         str(round(gain)),
+                                                       "Annealing" :    str(round(kData.getZ()[0]/24)),
+                                                       "Seed" :         str(round(seed))})
                     except:
                          pass
                 else:
                     pass
 
-
-
-            elif Name == kData.getName() and para == "Annealing":
+            elif name == kData.getName() and para == "Annealing":
                 # print((int(val) in range(int(round(kData.getZ()[0]/24*0.8)),int(round(kData.getZ()[0]/24*1.1)))))
                 if (int(val) in range(int(round(kData.getZ()[0]/self.__annealing_norm*0.8)),\
                                       int(round(kData.getZ()[0]/self.__annealing_norm*1.1))) \
-                                      or int(val) == kData.getZ()[0])\
-                                      and Name == kData.getName():
+                                      or int(val) == kData.getZ()[0]):
                     try:
                         # if it's an old Alibava measurement
                         if kData.getGain() == 1.0 and gain == None:
@@ -139,20 +132,20 @@ class dataGrabber(object):
                             except:
                                 seed = kData.getGain()*kData.getSeed()
                         if kData.getGain() == seed/kData.getSeed():
-                            self.__searchList.append((str(kData.getName()),
-                                                      kData.getID(),
-                                                      abs(round(kData.getX()[0])),
-                                                      round(kData.getGain()),
-                                                      round(kData.getZ()[0]/self.__annealing_norm),
-                                                      round(seed)))
+                            self.__searchList.append({"Name" :          str(kData.getName()),
+                                                       "ID" :           str(kData.getID()),
+                                                       "Voltage" :      str(abs(round(kData.getX()[0]))),
+                                                       "Gain" :         str(round(kData.getGain())),
+                                                       "Annealing" :    str(round(kData.getZ()[0]/24)),
+                                                       "Seed" :         str(round(seed))})
                             gain = None
                         else:
-                            self.__searchList.append((str(kData.getName()),
-                                                      kData.getID(),
-                                                      abs(round(kData.getX()[0])),
-                                                      round(gain),
-                                                      round(kData.getZ()[0]/self.__annealing_norm),
-                                                      round(seed)))
+                            self.__searchList.append({"Name" :          str(kData.getName()),
+                                                       "ID" :           str(kData.getID()),
+                                                       "Voltage" :      str(abs(round(kData.getX()[0]))),
+                                                       "Gain" :         str(round(gain)),
+                                                       "Annealing" :    str(round(kData.getZ()[0]/24)),
+                                                       "Seed" :         str(round(seed))})
                     except:
                         pass
                 else:
@@ -163,6 +156,8 @@ class dataGrabber(object):
         if self.__searchList == []:
             raise ValueError("Couldn't find data that met the requirements")
 
+        return True
+
 
     def output(self):
 
@@ -170,28 +165,58 @@ class dataGrabber(object):
               .format("SensorName","Run","Voltage","Gain","Annealing","SeedSignal"))
         for foo in self.__searchList:
             print("{:<20} {:<15} {:<15} {:<15} {:<15} {:<15}"\
-                  .format(*foo))
+                  .format(*list(foo.values())))
+
+        return True
 
 
-    def exportFile(self,*args):
+    def exportFile(self,searchList,para,path=None):
+
+        # Ubuntu
+        # path = "/home/diego/KITPlot/"
+        # Win10
+        if path == None or path == "":
+            path = self.defaultPath
+        else:
+            pass
+
+        if not os.path.exists(path):
+            raise ValueError("Given path does not exist.")
 
         try:
-            expo = [x for x in args if "-as" in x.lower() or "-vs" in x.lower()][0]
-
-            if expo == "-as":
-                with open(self.path + str(self.__dataList[0].getName() + ".txt"), 'w') as File:
-                    for line in self.__searchList:
-                        File.write(str(line[4]) + "   " + str(line[5]) + "\n")
+            if para == "Voltage":
+                with open(path + searchList[0]["Name"] + ".txt", 'w') as File:
+                    for dic in searchList:
+                        File.write("{:<15} {:<15}".format(dic["Annealing"], dic["Seed"]) + "\n")
                 File.close()
-                print("Data written into %s" %(str(self.__dataList[0].getName() + ".txt")))
-            elif expo == "-vs":
-                with open(self.path + str(self.__dataList[0].getName() + ".txt"), 'w') as File:
-                    for line in self.__searchList:
-                        File.write(str(line[2]) + "   " + str(line[5]) + "\n")
+                print("Data written into %s" %(searchList[0]["Name"] + ".txt"))
+            elif para == "Annealing":
+                with open(path + searchList[0]["Name"] + ".txt", 'w') as File:
+                    for line in searchList:
+                        File.write("{:<15} {:<15}".format(dic["Voltage"], dic["Seed"]) + "\n")
                 File.close()
-                print ("Data written into %s" %(str(self.__dataList[0].getName() + ".txt")))
+                print ("Data written into %s" %(searchList[0]["Name"] + ".txt"))
         except:
             pass
+
+        return True
+
+    def fill_dataList(self,startNr,endNr):
+
+        # make ID list from ID to ID
+        IDList = range(int(startNr),int(endNr)+1)
+
+        # start search
+        for ID in IDList:
+            try:
+                self.__dataList.append(KITData(ID,measurement="alibava",show_input=False))
+            except (ValueError) as e:
+                sys.exit(e)
+            except:
+                pass
+
+        return True
+
 
 
 if __name__ == '__main__':
