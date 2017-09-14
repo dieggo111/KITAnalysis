@@ -154,8 +154,9 @@ class dataGrabber(object):
                 pass
 
         if self.__searchList == []:
-            raise ValueError("Couldn't find data that met the requirements")
-
+            # raise ValueError("Couldn't find data that met the requirements")
+            print("Couldn't find data that met the requirements")
+            
         return True
 
 
