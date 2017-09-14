@@ -61,6 +61,10 @@ class MyFirstGuiProgram(Ui_MainWindow):
 
         print(self.list)
 
+        return True
+
+    def gainHandler(self)
+
     def save(self):
 
         # send save request

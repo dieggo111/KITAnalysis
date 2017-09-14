@@ -1,0 +1,9 @@
+*.pyc
+*.png
+*.jpg
+*.pdf
+*~
+*#
+*.txt
+__pycache__
+*.ui
