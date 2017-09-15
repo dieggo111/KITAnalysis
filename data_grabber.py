@@ -95,27 +95,28 @@ class dataGrabber(object):
                                 seed = kData.getGain()*kData.getSeed()
 
                         if kData.getGain() == seed/kData.getSeed():
-                            self.__searchList.append({"Name" :          str(kData.getName()),
-                                                       "ID" :           str(kData.getID()),
-                                                       "Voltage" :      str(abs(round(kData.getX()[0]))),
-                                                       "Gain" :         str(round(kData.getGain())),
-                                                       "Annealing" :    str(round(kData.getZ()[0]/24)),
-                                                       "Seed" :         str(round(seed))})
+                            self.__searchList.append({"Name" :         str(kData.getName()),
+                                                      "Project":       str(kData.getProject()),
+                                                      "ID" :           str(kData.getID()),
+                                                      "Voltage" :      str(abs(round(kData.getX()[0]))),
+                                                      "Gain" :         str(round(kData.getGain())),
+                                                      "Annealing" :    str(round(kData.getZ()[0]/24)),
+                                                      "Seed" :         str(round(seed))})
                             gain = None
                         else:
-                            self.__searchList.append({"Name" :          str(kData.getName()),
-                                                       "ID" :           str(kData.getID()),
-                                                       "Voltage" :      str(abs(round(kData.getX()[0]))),
-                                                       "Gain" :         str(round(gain)),
-                                                       "Annealing" :    str(round(kData.getZ()[0]/24)),
-                                                       "Seed" :         str(round(seed))})
+                            self.__searchList.append({"Name" :         str(kData.getName()),
+                                                      "Project":       str(kData.getProject()),
+                                                      "ID" :           str(kData.getID()),
+                                                      "Voltage" :      str(abs(round(kData.getX()[0]))),
+                                                      "Gain" :         str(round(gain)),
+                                                      "Annealing" :    str(round(kData.getZ()[0]/24)),
+                                                      "Seed" :         str(round(seed))})
                     except:
                          pass
                 else:
                     pass
 
             elif name == kData.getName() and para == "Annealing":
-                # print((int(val) in range(int(round(kData.getZ()[0]/24*0.8)),int(round(kData.getZ()[0]/24*1.1)))))
                 if (int(val) in range(int(round(kData.getZ()[0]/self.__annealing_norm*0.8)),\
                                       int(round(kData.getZ()[0]/self.__annealing_norm*1.1))) \
                                       or int(val) == kData.getZ()[0]):
@@ -132,20 +133,22 @@ class dataGrabber(object):
                             except:
                                 seed = kData.getGain()*kData.getSeed()
                         if kData.getGain() == seed/kData.getSeed():
-                            self.__searchList.append({"Name" :          str(kData.getName()),
-                                                       "ID" :           str(kData.getID()),
-                                                       "Voltage" :      str(abs(round(kData.getX()[0]))),
-                                                       "Gain" :         str(round(kData.getGain())),
-                                                       "Annealing" :    str(round(kData.getZ()[0]/24)),
-                                                       "Seed" :         str(round(seed))})
+                            self.__searchList.append({"Name" :         str(kData.getName()),
+                                                      "Project":       str(kData.getProject()),
+                                                      "ID" :           str(kData.getID()),
+                                                      "Voltage" :      str(abs(round(kData.getX()[0]))),
+                                                      "Gain" :         str(round(kData.getGain())),
+                                                      "Annealing" :    str(round(kData.getZ()[0]/24)),
+                                                      "Seed" :         str(round(seed))})
                             gain = None
                         else:
-                            self.__searchList.append({"Name" :          str(kData.getName()),
-                                                       "ID" :           str(kData.getID()),
-                                                       "Voltage" :      str(abs(round(kData.getX()[0]))),
-                                                       "Gain" :         str(round(gain)),
-                                                       "Annealing" :    str(round(kData.getZ()[0]/24)),
-                                                       "Seed" :         str(round(seed))})
+                            self.__searchList.append({"Name" :         str(kData.getName()),
+                                                      "Project":       str(kData.getProject()),
+                                                      "ID" :           str(kData.getID()),
+                                                      "Voltage" :      str(abs(round(kData.getX()[0]))),
+                                                      "Gain" :         str(round(gain)),
+                                                      "Annealing" :    str(round(kData.getZ()[0]/24)),
+                                                      "Seed" :         str(round(seed))})
                     except:
                         pass
                 else:
@@ -156,16 +159,16 @@ class dataGrabber(object):
         if self.__searchList == []:
             # raise ValueError("Couldn't find data that met the requirements")
             print("Couldn't find data that met the requirements")
-            
+
         return True
 
 
     def output(self):
 
-        print("{:<20} {:<15} {:<15} {:<15} {:<15} {:<15}"\
-              .format("SensorName","Run","Voltage","Gain","Annealing","SeedSignal"))
+        print("{:<20} {:<15} {:<15} {:<15} {:<15} {:<15} {:<15}"\
+              .format("SensorName","Project","Run","Voltage","Gain","Annealing","SeedSignal"))
         for foo in self.__searchList:
-            print("{:<20} {:<15} {:<15} {:<15} {:<15} {:<15}"\
+            print("{:<20} {:<15} {:<15} {:<15} {:<15} {:<15} {:<15}"\
                   .format(*list(foo.values())))
 
         return True

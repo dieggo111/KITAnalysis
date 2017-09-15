@@ -3,6 +3,8 @@ from data_grabber import dataGrabber
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QTableWidget,QTableWidgetItem
 from search_gui import Ui_MainWindow
+sys.path.append("C:\\Users\\Marius\\KITPlot\\")
+from KITPlot import KITPlot
 
 class KITAnalysis(Ui_MainWindow):
 
@@ -11,8 +13,20 @@ class KITAnalysis(Ui_MainWindow):
         Ui_MainWindow.__init__(self)
         self.setupUi(dialog)
 
+        self.cfgFolder = "C:\\Users\\Marius\\KITPlot\\Analysis_Tools\\cfg\\"
+        self.as_cfg = "ALiBaVa_as_default.cfg"
+        self.vs_cfg = "ALiBaVa_vs_default.cfg"
+        self.nameCol = 0
+        self.projectCol = 1
+        self.runCol = 2
+        self.voltCol = 3
+        self.annealCol = 4
+        self.gainCol = 5
+        self.seedCol = 6
+        self.checkCol = 7
+
         self.projectTable.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        self.resultTable.setColumnWidth(6,69)
+        self.resultTable.setColumnWidth(self.checkCol,68)
 
         self.updateButton.clicked.connect(self.update)
         self.startButton.clicked.connect(self.sendRequest)
@@ -20,7 +34,7 @@ class KITAnalysis(Ui_MainWindow):
         self.addButton.clicked.connect(self.add)
         self.clearButton.clicked.connect(self.clear)
         self.saveButton.clicked.connect(self.save)
-
+        self.drawButton.clicked.connect(self.draw)
 
         self.projectList = []
 
@@ -50,24 +64,25 @@ class KITAnalysis(Ui_MainWindow):
             for dic in self.searchResult:
                 rowPosition = self.resultTable.rowCount()
                 self.resultTable.insertRow(rowPosition)
-                self.resultTable.setItem(rowPosition,0,QTableWidgetItem(dic["Name"]))
-                self.resultTable.setItem(rowPosition,1,QTableWidgetItem(dic["ID"]))
-                self.resultTable.setItem(rowPosition,2,QTableWidgetItem(dic["Voltage"]))
-                self.resultTable.setItem(rowPosition,3,QTableWidgetItem(dic["Annealing"]))
-                self.resultTable.setItem(rowPosition,4,QTableWidgetItem(dic["Gain"]))
-                self.resultTable.setItem(rowPosition,5,QTableWidgetItem(dic["Seed"]))
+                self.resultTable.setItem(rowPosition,self.nameCol,QTableWidgetItem(dic["Name"]))
+                self.resultTable.setItem(rowPosition,self.projectCol,QTableWidgetItem(dic["Project"]))
+                self.resultTable.setItem(rowPosition,self.runCol,QTableWidgetItem(dic["ID"]))
+                self.resultTable.setItem(rowPosition,self.voltCol,QTableWidgetItem(dic["Voltage"]))
+                self.resultTable.setItem(rowPosition,self.annealCol,QTableWidgetItem(dic["Annealing"]))
+                self.resultTable.setItem(rowPosition,self.gainCol,QTableWidgetItem(dic["Gain"]))
+                self.resultTable.setItem(rowPosition,self.seedCol,QTableWidgetItem(dic["Seed"]))
 
                 # add checkboxes
                 chkBoxItem = QTableWidgetItem()
                 chkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
                 chkBoxItem.setCheckState(QtCore.Qt.Checked)
-                self.resultTable.setItem(rowPosition,6,chkBoxItem)
+                self.resultTable.setItem(rowPosition,self.checkCol,chkBoxItem)
 
 
     def add(self):
         itemList = []
         for i in range(self.resultTable.rowCount()):
-            if self.resultTable.item(i, 6).checkState() == QtCore.Qt.Checked:
+            if self.resultTable.item(i, self.checkCol).checkState() == QtCore.Qt.Checked:
                 itemList.append(i)
 
         newItem = [item for i, item in enumerate(self.searchResult) if i in itemList]
@@ -79,7 +94,9 @@ class KITAnalysis(Ui_MainWindow):
             # add to project table
             rowPosition = self.projectTable.rowCount()
             self.projectTable.insertRow(rowPosition)
-            self.projectTable.setItem(rowPosition,0,QTableWidgetItem(self.projectList[-1][0]["Name"]))
+            self.projectTable.setItem(rowPosition,self.nameCol,\
+                                      QTableWidgetItem(self.projectList[-1][0]["Name"] \
+                                      +" ("+self.projectList[-1][0]["Project"]+")"))
 
         return True
 
@@ -112,11 +129,38 @@ class KITAnalysis(Ui_MainWindow):
 
         return True
 
-
     def export(self):
         # send save request
         dataGrabber().exportFile(self.searchResult,self.paraBox.currentText(),self.pathBox.text())
 
+        return True
+
+    def draw(self):
+        projectData = []
+        for item in self.projectList:
+            x = []
+            y = []
+            for dic in item:
+                x.append(int(dic["Annealing"]))
+                y.append(int(dic["Seed"]))
+            projectData.append((x,y))
+
+        if self.projectBox.text() in os.listdir(self.cfgFolder):
+            os.remove(os.path.join(self.cfgFolder,(self.projectBox.text()+".cfg")))
+        else:
+            pass
+
+        if self.paraBox.currentText() == "Voltage":
+            kPlot = KITPlot(projectData,
+                            defaultCfg=os.path.join(self.cfgFolder,self.as_cfg),
+                            name=self.projectBox.text())
+        else:
+            kPlot = KITPlot(projectData,
+                            defaultCfg=os.path.join(self.cfgFolder,self.vs_cfg),
+                            name=self.projectBox.text())
+        kPlot.draw("matplotlib")
+        kPlot.saveCanvas()
+        kPlot.showCanvas()
         return True
 
 
