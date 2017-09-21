@@ -109,7 +109,7 @@ class KITAnalysis(Ui_MainWindow):
     def update(self):
         for i in range(0,self.resultTable.rowCount()):
             ADC = int(self.searchResult[i]["Seed"])/int(self.searchResult[i]["Gain"])
-            self.searchResult[i]["Gain"] = self.resultTable.item(i,4).text()
+            self.searchResult[i]["Gain"] = self.resultTable.item(i,self.gainCol).text()
             newSeed = round(int(self.searchResult[i]["Gain"])*ADC)
             self.searchResult[i]["Seed"] = str(newSeed)
 
@@ -118,7 +118,7 @@ class KITAnalysis(Ui_MainWindow):
         return True
 
     def save(self):
-        newPath = os.path.join(self.pathBox.text(),"newPlotProject\\")
+        newPath = os.path.join(self.pathBox.text(),self.projectBox.text() + "\\")
         if os.path.exists(newPath) == True:
             print("Path already exists. Rename your old project folder first.")
         else:
