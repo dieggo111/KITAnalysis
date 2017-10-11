@@ -47,7 +47,9 @@ class dataGrabber(object):
             raise ValueError("Unkown input")
 
         if int(startNr) > int(endNr):
-            raise ValueError("Unexpected input. StartNr must be smaller"
+            # raise ValueError("Unexpected input. StartNr must be smaller"
+            #                  " than endNr!")
+            print("Unexpected input. StartNr must be smaller"
                              " than endNr!")
         else:
             pass
