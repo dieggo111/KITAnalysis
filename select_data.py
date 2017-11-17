@@ -1,16 +1,9 @@
-import sys, os
-import numpy as np
 sys.path.append("C:\\Users\\Marius\\KITPlot\\")
 from KITPlot import KITData
 
-class dataGrabber(object):
+class selectData(object):
 
     def __init__(self):
-
-        # Ubuntu
-        # path = "/home/diego/KITPlot/"
-        # Win10
-        self.defaultPath = "C:\\Users\\Marius\\KITPlot\\"
 
         self.__dataList = []
         self.__searchList = []
@@ -18,20 +11,10 @@ class dataGrabber(object):
         self.__default_gain = 210
         self.__annealing_norm = 1
 
-    def main(self,runNr,searchItem,*args):
-
-        self.search_n_collect(runNr,searchItem,*args)
-        if self.__searchList == []:
-            pass
-        else:
-            self.output()
-        return self.__searchList
-
-
-    def search_n_collect(self,runNr,searchItem,*args):
+    def collect_alibava_id(self,runNr,searchItem,*args):
         """
-        runNr must look like "startNr-endNr"
-        searchPara must look like "Para=Value"
+        runNr: str, must look like "startNr-endNr"
+        searchItem: str, must look like "Para=Value"
 
         """
         # validate input (must be "ID-ID") and determine search parameter
@@ -163,70 +146,3 @@ class dataGrabber(object):
             print("Couldn't find data that met the requirements")
 
         return True
-
-
-    def output(self):
-
-        print("{:<20} {:<15} {:<15} {:<15} {:<15} {:<15} {:<15}"\
-              .format("SensorName","Project","Run","Voltage","Gain","Annealing","SeedSignal"))
-        for foo in self.__searchList:
-            print("{:<20} {:<15} {:<15} {:<15} {:<15} {:<15} {:<15}"\
-                  .format(*list(foo.values())))
-
-        return True
-
-
-    def exportFile(self,searchList,para,path=None):
-
-        # Ubuntu
-        # path = "/home/diego/KITPlot/"
-        # Win10
-        if path == None or path == "":
-            path = self.defaultPath
-        else:
-            pass
-
-        if not os.path.exists(path):
-            raise ValueError("Given path does not exist.")
-
-        try:
-            if para == "Voltage":
-                with open(path + searchList[0]["Name"] + ".txt", 'w') as File:
-                    for dic in searchList:
-                        File.write("{:<15} {:<15}".format(dic["Annealing"], dic["Seed"]) + "\n")
-                File.close()
-                print("Data written into %s" %(searchList[0]["Name"] + ".txt"))
-            elif para == "Annealing":
-                with open(path + searchList[0]["Name"] + ".txt", 'w') as File:
-                    for line in searchList:
-                        File.write("{:<15} {:<15}".format(dic["Voltage"], dic["Seed"]) + "\n")
-                File.close()
-                print ("Data written into %s" %(searchList[0]["Name"] + ".txt"))
-        except:
-            pass
-
-        return True
-
-    def fill_dataList(self,startNr,endNr):
-
-        # make ID list from ID to ID
-        IDList = range(int(startNr),int(endNr)+1)
-
-        # start search
-        for ID in IDList:
-            try:
-                self.__dataList.append(KITData(ID,measurement="alibava",show_input=False))
-            except (ValueError) as e:
-                sys.exit(e)
-            except:
-                pass
-
-        return True
-
-
-
-if __name__ == '__main__':
-
-    d = dataGrabber()
-    d.main(*sys.argv[1:])
-    d.output()
