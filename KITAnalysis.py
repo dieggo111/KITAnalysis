@@ -3,9 +3,12 @@ from data_grabber import dataGrabber
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QTableWidget,QTableWidgetItem
 from gui import Ui_MainWindow
-sys.path.append("C:\\Users\\Marius\\KITPlot\\")
-from KITPlot import KITPlot
 from strip_mean import strip_mean
+from pathlib import Path
+# assuming that "KITPlot" is one dir above top level
+sys.path.insert(0, Path(os.getcwd()).parents[0])
+from KITPlot import KITPlot
+from KITPlot.KITConfig import KITConfig
 
 class KITAnalysis(Ui_MainWindow):
 
@@ -14,23 +17,22 @@ class KITAnalysis(Ui_MainWindow):
         Ui_MainWindow.__init__(self)
         self.setupUi(dialog)
 
-        self.cfgFolder = "C:\\Users\\Marius\\KITPlot\\Analysis_Tools\\cfg\\"
+        # load gloabals and default values
+        settings = KITConfig("Settings.cfg")
 
-        self.limitDic = {
-                            "R_int"    : (1e8, 1e13),
-                            "R_poly_dc": (1e5,3e6),
-                            "I_leak_dc": (0.01e-9, 1e-9),
-                            "Pinhole"  : (0,8e12),
-                            "CC"       : (20e-12,70e-12),
-                            "C_int"    : (0.3e-12,1.3e-12)
-                        }
+        self.cfgFolder = settings["Globals", "cfgPath"]
 
-        self.setDefValues()
+        self.limitDic = settings["DefaultParameters", "Limits"]
+
+        self.setDefValues(settings)
 
         # tab 1
-        self.as_cfg = "ALiBaVa_as_default.cfg"
-        self.vs_cfg = "ALiBaVa_vs_default.cfg"
-
+        self.as_cfg = settings["DefaultCfgs", "SignalAnnealing"]
+        self.vs_cfg = settings["DefaultCfgs", "SignalVoltage"]
+        self.rint_cfg = settings["DefaultCfgs", "Rint"]
+        self.ncol = 0
+        self.chkcol = 7
+        self.gcol = 5
         self.projectTable.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         # self.resultTable.setColumnWidth(self.checkCol,68)
 
@@ -48,21 +50,22 @@ class KITAnalysis(Ui_MainWindow):
         self.startButton_tab2.clicked.connect(self.sm_start)
         self.clearButton_tab2.clicked.connect(lambda: self.clear(self.resultTable_tab2))
         self.updateButton_tab2.clicked.connect(self.update_tab2)
+        self.previewButton_tab2.clicked.connect(self.preview)
 
-    def setDefValues(self):
+    def setDefValues(self,settings):
         self.startBox.setText("229000")
         self.endBox.setText("229800")
         self.valueBox.setText("600")
         self.nameBox.setText("KIT_Test_07")
-        self.pathBox.setText("C:\\Users\\Marius\\KITPlot\\")
+        self.pathBox.setText(settings["DefaultParameters", "OutputPath"])
         self.projectBox.setText("NewProject")
         self.startBox_tab2.setText("34749")
         self.nameBox_tab2.setText("KIT_Test_23")
-        self.pathBox_tab2.setText("C:\\Users\\Marius\\KITPlot\\")
+        self.pathBox_tab2.setText(settings["DefaultParameters", "OutputPath"])
 
         for column in range(0,self.limitTable.columnCount()):
-            self.limitTable.setItem(0,column,QTableWidgetItem("{:0.1e}".format(self.limitDic[self.limitTable.horizontalHeaderItem(0).text()][0])))
-            self.limitTable.setItem(1,column,QTableWidgetItem("{:0.1e}".format(self.limitDic[self.limitTable.horizontalHeaderItem(0).text()][1])))
+            self.limitTable.setItem(0,column,QTableWidgetItem("{:0.1e}".format(self.limitDic[self.limitTable.horizontalHeaderItem(column).text()][0])))
+            self.limitTable.setItem(1,column,QTableWidgetItem("{:0.1e}".format(self.limitDic[self.limitTable.horizontalHeaderItem(column).text()][1])))
 
 
     def sendRequest(self):
@@ -99,7 +102,7 @@ class KITAnalysis(Ui_MainWindow):
                 for dic in result:
                     rowPosition = tab.rowCount()
                     tab.insertRow(rowPosition)
-                    tab.setItem(rowPosition,0,QTableWidgetItem(dic["Name"]))
+                    tab.setItem(rowPosition,self.ncol,QTableWidgetItem(dic["Name"]))
                     tab.setItem(rowPosition,1,QTableWidgetItem(dic["Project"]))
                     tab.setItem(rowPosition,2,QTableWidgetItem(dic["ID"]))
                     tab.setItem(rowPosition,3,QTableWidgetItem(dic["Voltage"]))
@@ -111,7 +114,7 @@ class KITAnalysis(Ui_MainWindow):
                     chkBoxItem = QTableWidgetItem()
                     chkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
                     chkBoxItem.setCheckState(QtCore.Qt.Checked)
-                    tab.setItem(rowPosition,7,chkBoxItem)
+                    tab.setItem(rowPosition,self.chkcol,chkBoxItem)
 
             elif tab == self.resultTable_tab2:
                 if result[0].getFluenceP() == None:
@@ -139,11 +142,11 @@ class KITAnalysis(Ui_MainWindow):
     def add(self):
         itemList = []
         for i in range(self.resultTable.rowCount()):
-            if self.resultTable.item(i, self.checkCol).checkState() == QtCore.Qt.Checked:
+            if self.resultTable.item(i, self.chkcol).checkState() == QtCore.Qt.Checked:
                 itemList.append(i)
 
         try:
-            newItem = [item for i, item in enumerate(result) if i in itemList]
+            newItem = [item for i, item in enumerate(self.searchResult) if i in itemList]
 
             if newItem in self.projectList:
                 # print("Item has already been added to project...")
@@ -154,7 +157,7 @@ class KITAnalysis(Ui_MainWindow):
                 # add to project table
                 rowPosition = self.projectTable.rowCount()
                 self.projectTable.insertRow(rowPosition)
-                self.projectTable.setItem(rowPosition,self.nameCol,\
+                self.projectTable.setItem(rowPosition,self.ncol,\
                                           QTableWidgetItem(self.projectList[-1][0]["Name"] \
                                           +" ("+self.projectList[-1][0]["Project"]+")"))
         except:
@@ -173,17 +176,23 @@ class KITAnalysis(Ui_MainWindow):
     def update_tab1(self):
         for i in range(0,self.resultTable.rowCount()):
             ADC = int(self.searchResult[i]["Seed"])/int(self.searchResult[i]["Gain"])
-            self.searchResult[i]["Gain"] = self.resultTable.item(i,self.gainCol).text()
+            self.searchResult[i]["Gain"] = self.resultTable.item(i,self.gcol).text()
             newSeed = round(int(self.searchResult[i]["Gain"])*ADC)
             self.searchResult[i]["Seed"] = str(newSeed)
 
         self.resultTable.setRowCount(0)
-        self.write_to_table()
+        self.write_to_table(self.searchResult,self.resultTable)
         self.statusbar.showMessage("Table updated...")
         return True
 
     def update_tab2(self):
-        # for column in self.limitTable
+        # get new limit values from limitTable and write them into limitDic
+        for column in range(0,self.limitTable.columnCount()):
+            for row in range(0,2):
+                if float(self.limitTable.item(row,column).text()) != self.limitDic[self.limitTable.horizontalHeaderItem(column).text()][row]:
+                    self.limitDic[self.limitTable.horizontalHeaderItem(column).text()][row] = float(self.limitTable.item(row,column).text())
+        self.clear(self.resultTable_tab2)
+        self.sm_start()
         return True
 
     def save(self):
@@ -206,6 +215,7 @@ class KITAnalysis(Ui_MainWindow):
             pass
         else:
             self.write_to_table(data, self.resultTable_tab2)
+            self.preview_tab2 = data[0]
 
 
     def export(self):
@@ -213,6 +223,14 @@ class KITAnalysis(Ui_MainWindow):
         dataGrabber().exportFile(self.searchResult,self.paraBox.currentText(),self.pathBox.text())
 
         return True
+
+    def preview(self):
+        x = self.preview_tab2.getX()
+        y = self.preview_tab2.getY()
+        kPlot = KITPlot([x,y],defaultCfg=self.rint_cfg,name="preview")
+        kPlot.draw("matplotlib")
+        kPlot.saveCanvas()
+        kPlot.showCanvas()
 
     def draw(self):
         projectData = []
@@ -224,22 +242,28 @@ class KITAnalysis(Ui_MainWindow):
                 y.append(int(dic["Seed"]))
             projectData.append((x,y))
 
-        if self.projectBox.text() in os.listdir(self.cfgFolder):
-            os.remove(os.path.join(self.cfgFolder,(self.projectBox.text()+".cfg")))
-        else:
-            pass
+        # if self.projectBox.text() in os.listdir(self.cfgFolder):
+        #     os.remove(os.path.join(self.cfgFolder,(self.projectBox.text()+".cfg")))
+        # else:
+        #     pass
+        try:
+            if self.paraBox.currentText() == "Voltage":
+                kPlot = KITPlot(projectData,
+                                defaultCfg=self.as_cfg,
+                                name=self.projectBox.text())
+            else:
+                kPlot = KITPlot(projectData,
+                                defaultCfg=self.vs_cfg,
+                                name=self.projectBox.text())
+            kPlot.draw("matplotlib")
+            kPlot.saveCanvas()
+            kPlot.showCanvas()
+        except(KeyError):
+            self.statusbar.showMessage("...")
+        except:
+            self.statusbar.showMessage("...")
 
-        if self.paraBox.currentText() == "Voltage":
-            kPlot = KITPlot(projectData,
-                            defaultCfg=os.path.join(self.cfgFolder,self.as_cfg),
-                            name=self.projectBox.text())
-        else:
-            kPlot = KITPlot(projectData,
-                            defaultCfg=os.path.join(self.cfgFolder,self.vs_cfg),
-                            name=self.projectBox.text())
-        kPlot.draw("matplotlib")
-        kPlot.saveCanvas()
-        kPlot.showCanvas()
+
         return True
 
 

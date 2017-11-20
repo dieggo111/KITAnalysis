@@ -1,16 +1,13 @@
 import sys, os
 import numpy as np
+from pathlib import Path
+# assuming that "KITPlot" is one dir above top level
 sys.path.append("C:\\Users\\Marius\\KITPlot\\")
 from KITPlot import KITData
 
 class dataGrabber(object):
 
     def __init__(self):
-
-        # Ubuntu
-        # path = "/home/diego/KITPlot/"
-        # Win10
-        self.defaultPath = "C:\\Users\\Marius\\KITPlot\\"
 
         self.__dataList = []
         self.__searchList = []
@@ -178,11 +175,8 @@ class dataGrabber(object):
 
     def exportFile(self,searchList,para,path=None):
 
-        # Ubuntu
-        # path = "/home/diego/KITPlot/"
-        # Win10
         if path == None or path == "":
-            path = self.defaultPath
+            path = os.getcwd()
         else:
             pass
 
@@ -194,14 +188,12 @@ class dataGrabber(object):
                 with open(path + searchList[0]["Name"] + ".txt", 'w') as File:
                     for dic in searchList:
                         File.write("{:<15} {:<15}".format(dic["Annealing"], dic["Seed"]) + "\n")
-                File.close()
-                print("Data written into %s" %(searchList[0]["Name"] + ".txt"))
             elif para == "Annealing":
                 with open(path + searchList[0]["Name"] + ".txt", 'w') as File:
                     for line in searchList:
                         File.write("{:<15} {:<15}".format(dic["Voltage"], dic["Seed"]) + "\n")
-                File.close()
-                print ("Data written into %s" %(searchList[0]["Name"] + ".txt"))
+            File.close()
+            print ("Data written into %s" %(path+searchList[0]["Name"] + ".txt"))
         except:
             pass
 

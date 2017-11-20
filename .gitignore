@@ -9,3 +9,6 @@ __pycache__
 *.ui
 cfg\
 cfg/
+db.cfg
+output\
+output/
