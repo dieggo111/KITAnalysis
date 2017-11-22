@@ -173,32 +173,6 @@ class dataGrabber(object):
         return True
 
 
-    def exportFile(self,searchList,para,path=None):
-
-        if path == None or path == "":
-            path = os.getcwd()
-        else:
-            pass
-
-        if not os.path.exists(path):
-            raise ValueError("Given path does not exist.")
-
-        try:
-            if para == "Voltage":
-                with open(path + searchList[0]["Name"] + ".txt", 'w') as File:
-                    for dic in searchList:
-                        File.write("{:<15} {:<15}".format(dic["Annealing"], dic["Seed"]) + "\n")
-            elif para == "Annealing":
-                with open(path + searchList[0]["Name"] + ".txt", 'w') as File:
-                    for line in searchList:
-                        File.write("{:<15} {:<15}".format(dic["Voltage"], dic["Seed"]) + "\n")
-            File.close()
-            print ("Data written into %s" %(path+searchList[0]["Name"] + ".txt"))
-        except:
-            pass
-
-        return True
-
     def fill_dataList(self,startNr,endNr):
 
         # make ID list from ID to ID

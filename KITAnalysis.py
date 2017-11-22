@@ -21,15 +21,11 @@ class KITAnalysis(Ui_MainWindow):
         settings = KITConfig("Settings.cfg")
 
         self.cfgFolder = settings["Globals", "cfgPath"]
-
         self.limitDic = settings["DefaultParameters", "Limits"]
-
+        self.defaultCfgDic = settings["DefaultCfgs"]
         self.setDefValues(settings)
 
         # tab 1
-        self.as_cfg = settings["DefaultCfgs", "SignalAnnealing"]
-        self.vs_cfg = settings["DefaultCfgs", "SignalVoltage"]
-        self.rint_cfg = settings["DefaultCfgs", "Rint"]
         self.ncol = 0
         self.chkcol = 7
         self.gcol = 5
@@ -38,7 +34,7 @@ class KITAnalysis(Ui_MainWindow):
 
         self.updateButton.clicked.connect(self.update_tab1)
         self.startButton.clicked.connect(self.sendRequest)
-        self.exportButton.clicked.connect(self.export)
+        self.exportButton.clicked.connect(self.export_tab1)
         self.addButton.clicked.connect(self.add)
         self.clearButton.clicked.connect(lambda: self.clear(self.projectTable))
         self.saveButton.clicked.connect(self.save)
@@ -51,6 +47,8 @@ class KITAnalysis(Ui_MainWindow):
         self.clearButton_tab2.clicked.connect(lambda: self.clear(self.resultTable_tab2))
         self.updateButton_tab2.clicked.connect(self.update_tab2)
         self.previewButton_tab2.clicked.connect(self.preview)
+        self.exportButton_tab2.clicked.connect(self.export_tab2)
+        self.searchResult_tab2 = []
 
     def setDefValues(self,settings):
         self.startBox.setText("229000")
@@ -172,6 +170,7 @@ class KITAnalysis(Ui_MainWindow):
             tab.setRowCount(0)
         else:
             tab.setRowCount(0)
+            self.searchResult_tab2 = []
 
     def update_tab1(self):
         for i in range(0,self.resultTable.rowCount()):
@@ -186,6 +185,7 @@ class KITAnalysis(Ui_MainWindow):
         return True
 
     def update_tab2(self):
+
         # get new limit values from limitTable and write them into limitDic
         for column in range(0,self.limitTable.columnCount()):
             for row in range(0,2):
@@ -199,38 +199,97 @@ class KITAnalysis(Ui_MainWindow):
         newPath = os.path.join(self.pathBox.text(),self.projectBox.text() + "\\")
         if os.path.exists(newPath) == True:
             self.statusbar.showMessage("Path already exists. Rename your old project folder...")
-            # print("Path already exists. Rename your old project folder first.")
         else:
             os.mkdir(newPath)
             for item in self.projectList:
-                dataGrabber().exportFile(item,self.paraBox.currentText(),newPath)
+                x = []
+                y = []
+                for dic in item:
+                    x.append(dic["Annealing"])
+                    y.append(dic["Seed"])
+                print(x,y,newPath,item[0]["Name"])
+                self.write(x,y,path=newPath,name=item[0]["Name"])
             self.statusbar.showMessage("Project saved...")
-            # print("Project saved...")
-
         return True
 
     def sm_start(self):
+        """
+        strip_mean() returns (KITData object, mean val, std error)
+        """
         data = strip_mean(self.startBox_tab2.text(), self.limitDic).init()
         if isinstance(data, list):
             pass
         else:
             self.write_to_table(data, self.resultTable_tab2)
-            self.preview_tab2 = data[0]
+            self.searchResult_tab2.append(data[0])
 
+    def write(self,x,y,opt=None,path=None,name=None):
+        if path == None or path == "":
+            path = os.getcwd()
+        if name == None or name == "":
+            name = "NewProject"
 
-    def export(self):
-        # send save request
-        dataGrabber().exportFile(self.searchResult,self.paraBox.currentText(),self.pathBox.text())
+        if not os.path.exists(path):
+            raise ValueError("Given path does not exist.")
 
+        with open(path + name + ".txt", 'w') as File:
+            if opt == None:
+                for i,j in list(zip(x,y)):
+                    File.write("{:<15} {:<15}".format(i,j) + "\n")
+            else:
+                for i,j,k in list(zip(x,y,opt)):
+                    File.write("{:<15} {:<15} {:<15}".format(i,j,k) + "\n")
+            File.close()
+            print ("Data written into %s" %(path+name+".txt"))
         return True
 
+    def export_tab1(self):
+        # send save request
+        x = []
+        y = []
+        for dic in self.searchResult:
+            x.append(dic["Annealing"])
+            y.append(dic["Seed"])
+        self.write(x,y,path=self.pathBox.text(),name=self.projectBox.text())
+        return True
+
+    def export_tab2(self):
+        x = []
+        y = []
+        err = []
+        itemList = self.isChecked(self.resultTable_tab2,8)
+        for row in range(0,self.resultTable_tab2.rowCount()):
+            if row in itemList:
+                # strip parameter
+                x.append(self.resultTable_tab2.item(row,4).text())
+                # mean value
+                y.append(self.resultTable_tab2.item(row,5).text())
+                # std deviation
+                err.append(self.resultTable_tab2.item(row,6).text())
+        self.write(x,y,opt=err,path=self.pathBox.text(),name=self.resultTable_tab2.item(itemList[0],0).text())
+        return True
+
+    def isChecked(self,tab,col):
+        itemList = []
+        for i in range(tab.rowCount()):
+            if tab.item(i, col).checkState() == QtCore.Qt.Checked:
+                itemList.append(i)
+        return itemList
+
     def preview(self):
-        x = self.preview_tab2.getX()
-        y = self.preview_tab2.getY()
-        kPlot = KITPlot([x,y],defaultCfg=self.rint_cfg,name="preview")
-        kPlot.draw("matplotlib")
-        kPlot.saveCanvas()
-        kPlot.showCanvas()
+        itemList = self.isChecked(self.resultTable_tab2,8)
+        if len(itemList)>1:
+            self.statusbar.showMessage("Only one preview at a time...")
+        else:
+            for i, dataSet in enumerate(self.searchResult_tab2):
+                if i in itemList:
+                    x = dataSet.getX()
+                    y = dataSet.getY()
+                    data = [(x,y)]
+                    kPlot = KITPlot(data,defaultCfg=self.defaultCfgDic[dataSet.getParaY()],name="preview")
+                    kPlot.draw("matplotlib")
+                    kPlot.saveCanvas()
+                    kPlot.showCanvas()
 
     def draw(self):
         projectData = []
@@ -241,27 +300,27 @@ class KITAnalysis(Ui_MainWindow):
                 x.append(int(dic["Annealing"]))
                 y.append(int(dic["Seed"]))
             projectData.append((x,y))
-
+        print(projectData)
         # if self.projectBox.text() in os.listdir(self.cfgFolder):
         #     os.remove(os.path.join(self.cfgFolder,(self.projectBox.text()+".cfg")))
         # else:
         #     pass
-        try:
-            if self.paraBox.currentText() == "Voltage":
-                kPlot = KITPlot(projectData,
-                                defaultCfg=self.as_cfg,
-                                name=self.projectBox.text())
-            else:
-                kPlot = KITPlot(projectData,
-                                defaultCfg=self.vs_cfg,
-                                name=self.projectBox.text())
-            kPlot.draw("matplotlib")
-            kPlot.saveCanvas()
-            kPlot.showCanvas()
-        except(KeyError):
-            self.statusbar.showMessage("...")
-        except:
-            self.statusbar.showMessage("...")
+        # try:
+        if self.paraBox.currentText() == "Voltage":
+            kPlot = KITPlot(projectData,
+                            defaultCfg=self.defaultCfgDic["SignalVoltage"],
+                            name=self.projectBox.text())
+        else:
+            kPlot = KITPlot(projectData,
+                            defaultCfg=self.defaultCfgDic["SignalAnnealing"],
+                            name=self.projectBox.text())
+        kPlot.draw("matplotlib")
+        kPlot.saveCanvas()
+        kPlot.showCanvas()
+        # except(KeyError):
+        #     self.statusbar.showMessage("...")
+        # except:
+        #     self.statusbar.showMessage("...")
 
 
         return True
