@@ -18,7 +18,7 @@ class KITAnalysis(Ui_MainWindow):
         self.setupUi(dialog)
 
         # load gloabals and default values
-        settings = KITConfig("Settings.cfg")
+        settings = KITConfig("Resources\\Settings.cfg")
 
         self.cfgFolder = settings["Globals", "cfgPath"]
         self.limitDic = settings["DefaultParameters", "Limits"]
@@ -33,7 +33,7 @@ class KITAnalysis(Ui_MainWindow):
         # self.resultTable.setColumnWidth(self.checkCol,68)
 
         self.updateButton.clicked.connect(self.update_tab1)
-        self.startButton.clicked.connect(self.sendRequest)
+        self.startButton.clicked.connect(self.start_tab1)
         self.exportButton.clicked.connect(self.export_tab1)
         self.addButton.clicked.connect(self.add)
         self.clearButton.clicked.connect(lambda: self.clear(self.projectTable))
@@ -44,20 +44,17 @@ class KITAnalysis(Ui_MainWindow):
 
         # tab 2
         self.startButton_tab2.clicked.connect(self.sm_start)
-        self.clearButton_tab2.clicked.connect(lambda: self.clear(self.resultTable_tab2))
+        self.clearButton_tab2.clicked.connect(lambda: self.clear(self.resultTab_tab2))
         self.updateButton_tab2.clicked.connect(self.update_tab2)
         self.previewButton_tab2.clicked.connect(self.preview)
         self.exportButton_tab2.clicked.connect(self.export_tab2)
         self.searchResult_tab2 = []
 
     def setDefValues(self,settings):
-        self.startBox.setText("229000")
-        self.endBox.setText("229800")
-        self.valueBox.setText("600")
-        self.nameBox.setText("KIT_Test_07")
-        self.pathBox.setText(settings["DefaultParameters", "OutputPath"])
-        self.projectBox.setText("NewProject")
-        self.startBox_tab2.setText("34749")
+        self.valueBox_tab1.setText("600")
+        self.nameBox_tab1.setText("KIT_Test_07")
+        self.pathBox_tab1.setText(settings["DefaultParameters", "OutputPath"])
+        self.projectBox_tab1.setText("NewProject")
         self.nameBox_tab2.setText("KIT_Test_23")
         self.pathBox_tab2.setText(settings["DefaultParameters", "OutputPath"])
 
@@ -66,47 +63,44 @@ class KITAnalysis(Ui_MainWindow):
             self.limitTable.setItem(1,column,QTableWidgetItem("{:0.1e}".format(self.limitDic[self.limitTable.horizontalHeaderItem(column).text()][1])))
 
 
-    def sendRequest(self):
-        # reset tabel<
-        self.resultTable.setRowCount(0)
+    def start_tab1(self):
+        # reset tabel
+        self.resultTab_tab1.setRowCount(0)
 
-        # send search request
-        if self.nameBox.text() == "":
-            name = None
-        else:
-            name = "Name=" + self.nameBox.text()
-
-        runNr = self.startBox.text() + "-" + self.endBox.text()
-        searchInput = str(self.paraBox.currentText()) + "=" + self.valueBox.text()
-        d = dataGrabber()
-        self.statusbar.showMessage("Establishing database connection...")
-        try:
-            self.searchResult = d.main(runNr,searchInput,name)
-            if self.searchResult == []:
-                self.statusbar.showMessage("Couldn't find data that met the requirements...")
-            else:
-                self.write_to_table(self.searchResult, self.resultTable)
-                self.statusbar.showMessage("Search completed...")
-        except:
-            self.statusbar.showMessage("Connection failed...")
+        grabber = dataGrabber()
+        data = grabber.alibava_search(self.nameBox_tab1.text(),self.paraBox_tab1.currentText(),self.valueBox_tab1.text())
+        self.statusbar.showMessage("Search completed...")
+        self.write_to_table(data, self.resultTab_tab1)
+        #
+        # self.statusbar.showMessage("Establishing database connection...")
+        # try:
+        #     self.searchResult = d.main(runNr,searchInput,name)
+        #     if self.searchResult == []:
+        #         self.statusbar.showMessage("Couldn't find data that met the requirements...")
+        #     else:
+        #         self.write_to_table(self.searchResult, self.resultTable)
+        #         self.statusbar.showMessage("Search completed...")
+        # except:
+        #     self.statusbar.showMessage("Connection failed...")
 
 
     def write_to_table(self, result, tab):
-        if result == []:
+        if result == {}:
             pass
         else:
             # fill table with data
-            if tab == self.resultTable:
-                for dic in result:
+            if tab == self.resultTab_tab1:
+                for sec in result:
+                    # print(result[sec]["voltage"],result[sec]["seed"])
                     rowPosition = tab.rowCount()
                     tab.insertRow(rowPosition)
-                    tab.setItem(rowPosition,self.ncol,QTableWidgetItem(dic["Name"]))
-                    tab.setItem(rowPosition,1,QTableWidgetItem(dic["Project"]))
-                    tab.setItem(rowPosition,2,QTableWidgetItem(dic["ID"]))
-                    tab.setItem(rowPosition,3,QTableWidgetItem(dic["Voltage"]))
-                    tab.setItem(rowPosition,4,QTableWidgetItem(dic["Annealing"]))
-                    tab.setItem(rowPosition,5,QTableWidgetItem(dic["Gain"]))
-                    tab.setItem(rowPosition,6,QTableWidgetItem(dic["Seed"]))
+                    tab.setItem(rowPosition,self.ncol,QTableWidgetItem(result[sec]["name"]))
+                    tab.setItem(rowPosition,1,QTableWidgetItem(result[sec]["project"]))
+                    tab.setItem(rowPosition,2,QTableWidgetItem(str(sec)))
+                    tab.setItem(rowPosition,3,QTableWidgetItem(result[sec]["voltage"]))
+                    tab.setItem(rowPosition,4,QTableWidgetItem(result[sec]["annealing"]))
+                    tab.setItem(rowPosition,5,QTableWidgetItem(result[sec]["gain"]))
+                    tab.setItem(rowPosition,6,QTableWidgetItem(result[sec]["seed"]))
 
                     # add checkboxes
                     chkBoxItem = QTableWidgetItem()
@@ -114,7 +108,7 @@ class KITAnalysis(Ui_MainWindow):
                     chkBoxItem.setCheckState(QtCore.Qt.Checked)
                     tab.setItem(rowPosition,self.chkcol,chkBoxItem)
 
-            elif tab == self.resultTable_tab2:
+            elif tab == self.resultTab_tab2:
                 if result[0].getFluenceP() == None:
                     fluence = 0
                 else:
@@ -191,7 +185,7 @@ class KITAnalysis(Ui_MainWindow):
             for row in range(0,2):
                 if float(self.limitTable.item(row,column).text()) != self.limitDic[self.limitTable.horizontalHeaderItem(column).text()][row]:
                     self.limitDic[self.limitTable.horizontalHeaderItem(column).text()][row] = float(self.limitTable.item(row,column).text())
-        self.clear(self.resultTable_tab2)
+        self.clear(self.resultTab_tab2)
         self.sm_start()
         return True
 
@@ -220,7 +214,7 @@ class KITAnalysis(Ui_MainWindow):
         if isinstance(data, list):
             pass
         else:
-            self.write_to_table(data, self.resultTable_tab2)
+            self.write_to_table(data, self.resultTab_tab2)
             self.searchResult_tab2.append(data[0])
 
     def write(self,x,y,opt=None,path=None,name=None):
@@ -257,16 +251,16 @@ class KITAnalysis(Ui_MainWindow):
         x = []
         y = []
         err = []
-        itemList = self.isChecked(self.resultTable_tab2,8)
-        for row in range(0,self.resultTable_tab2.rowCount()):
+        itemList = self.isChecked(self.resultTab_tab2,8)
+        for row in range(0,self.resultTab_tab2.rowCount()):
             if row in itemList:
                 # strip parameter
-                x.append(self.resultTable_tab2.item(row,4).text())
+                x.append(self.resultTab_tab2.item(row,4).text())
                 # mean value
-                y.append(self.resultTable_tab2.item(row,5).text())
+                y.append(self.resultTab_tab2.item(row,5).text())
                 # std deviation
-                err.append(self.resultTable_tab2.item(row,6).text())
-        self.write(x,y,opt=err,path=self.pathBox.text(),name=self.resultTable_tab2.item(itemList[0],0).text())
+                err.append(self.resultTab_tab2.item(row,6).text())
+        self.write(x,y,opt=err,path=self.pathBox.text(),name=self.resultTab_tab2.item(itemList[0],0).text())
         return True
 
     def isChecked(self,tab,col):
@@ -277,7 +271,7 @@ class KITAnalysis(Ui_MainWindow):
         return itemList
 
     def preview(self):
-        itemList = self.isChecked(self.resultTable_tab2,8)
+        itemList = self.isChecked(self.resultTab_tab2,8)
         if len(itemList)>1:
             self.statusbar.showMessage("Only one preview at a time...")
         else:
@@ -300,7 +294,6 @@ class KITAnalysis(Ui_MainWindow):
                 x.append(int(dic["Annealing"]))
                 y.append(int(dic["Seed"]))
             projectData.append((x,y))
-        print(projectData)
         # if self.projectBox.text() in os.listdir(self.cfgFolder):
         #     os.remove(os.path.join(self.cfgFolder,(self.projectBox.text()+".cfg")))
         # else:
