@@ -7,19 +7,14 @@ from KITPlot.KITSearch import KITSearch
 
 class dataGrabber(object):
 
-    def __init__(self):
+    def __init__(self,credentials):
 
         self.__dataList = []
         self.__searchList = []
         self.__paraList = ["Voltage","Annealing"]
         self.__default_gain = 210
         self.__annealing_norm = 1
-
-        self.db = {   "host": "192.168.13.2",
-                      "port": "3306",
-                      "database": "sample",
-                      "user": "abfrage",
-                      "passwd": "JtjTN9M4WpQr,29t"}
+        self.dbCreds = credentials
 
     def output(self):
 
@@ -31,20 +26,52 @@ class dataGrabber(object):
 
         return True
 
+    def strip_search(self,name,para):
+        session = KITSearch(self.dbCreds)
+        dic = session.probe_search_for_name(name)
+        if para == "*":
+            # get rid of unanalyzed sections
+            dic = self.pop_items(dic,"IVCV")
+            # KITAnalysis expects values to be str type
+            dic = self.convert_keys(dic)
+        else:
+            dic = self.pop_items(dic,para)
+            dic = self.convert_keys(dic)
+        return dic
 
     def alibava_search(self,name,para,value):
-        session = KITSearch(self.db)
+        session = KITSearch(self.dbCreds)
         if para == "Voltage":
-            dic = session.search_for_name_voltage(name,int(value),"alibava")
+            dic = session.ali_search_for_name_voltage(name,int(value))
+            # get rid of unanalyzed sections
+            dic = self.pop_items(dic,"unanalyzed")
             # KITAnalysis expects values to be str type
-            for sec in dic:
-                for sub in dic[sec]:
-                    if isinstance(dic[sec][sub], (int, float)):
-                        dic[sec][sub] = str(round(dic[sec][sub]))
-            return dic
+            dic = self.convert_keys(dic)
         elif para == "Annealing":
-            pass
+            dic = session.ali_search_for_name_annealing(name,int(value))
+            dic = self.pop_items(dic)
+            dic = self.convert_keys(dic)
+        return dic
 
+    def convert_keys(self,dic):
+        for sec in dic:
+            for sub in dic[sec]:
+                if isinstance(dic[sec][sub], (int, float)):
+                    dic[sec][sub] = str(abs(round(dic[sec][sub])))
+        return dic
+
+    def pop_items(self,dic,opt):
+        delList = []
+        for sec in dic:
+            if opt == "unanalyzed" and dic[sec]["gain"] == None:
+                delList.append(sec)
+            elif opt == "IVCV" and dic[sec]["paraY"] in ("C_tot", "I_tot"):
+                delList.append(sec)
+            elif opt in ("R_int","R_poly_dc","I_leak_dc","C_int","CC","Pinhole") and dic[sec]["paraY"] != opt:
+                delList.append(sec)
+        for run in delList:
+            dic.pop(run)
+        return dic
 
 if __name__ == '__main__':
 

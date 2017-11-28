@@ -18,9 +18,8 @@ method.
 
 class strip_mean(object):
 
-    def __init__(self,Input,limitDic):
+    def __init__(self,limitDic):
 
-        self.Input = Input
         self.fileList = []
         self.path = "/home/diego/Desktop/Data/HPK_2S_II_"
         self.sections = []
@@ -29,16 +28,25 @@ class strip_mean(object):
 
         self.limitDic = limitDic
 
+    def getMean(self,Input):
 
-    def init(self):
+        # dict with raw data
+        if isinstance(Input, dict):
+            fileOutput = self.calc(Input["dataY"],Input["paraY"])
+            r = round(float(fileOutput[0])*100,2)
+            print("(" + str(r) + "%) of ("
+                  + str(len(Input["dataY"])) + ") data points excluded")
+            print(str(Input["name"]) + "_" + str(Input["paraY"]) + " = "
+                  + str(fileOutput[1]) + " ;   " + str(fileOutput[2]) + ";")
+            return (Input,fileOutput)
 
         # single ID
-        if self.Input.isdigit() == True:
+        elif self.Input.isdigit() == True:
             file1 = KITData(self.Input)
 
             fileOutput = self.calc(file1)
-
-            print("(" + str(len(file1.getY())-fileOutput[0]) + ") of ("
+            r = round(float(fileOutput[0])*100,2)
+            print("(" + str(r) + "%) of ("
                   + str(len(file1.getY())) + ") data points excluded")
             print(str(file1.getName()) + "_" + str(file1.getParaY()) + " = "
                   + str(fileOutput[1]) + " ;   " + str(fileOutput[2]) + ";")
@@ -59,18 +67,26 @@ class strip_mean(object):
             return self.fileList
 
 
-    def calc(self,data):
+    def calc(self,data,para=None):
         corrList=[]
-        for val in data.getY():
-            if self.limitDic[data.getParaY()][0]<abs(val)<self.limitDic[data.getParaY()][1]:
-                corrList.append(val)
-            else:
-                pass
+        if isinstance(data, KITData):
+            for val in data.getY():
+                if self.limitDic[data.getParaY()][0]<abs(val)<self.limitDic[data.getParaY()][1]:
+                    corrList.append(val)
+                else:
+                    pass
+            ratio = round(len(corrList)/len(data.getParaY()),2)
 
+        else:
+            for val in data:
+                if self.limitDic[para][0]<abs(val)<self.limitDic[para][1]:
+                    corrList.append(val)
+                else:
+                    pass
+            ratio = round((len(data)-len(corrList))/len(data),2)
         mean = "{:0.3e}".format(np.mean(corrList))
         std = "{:0.3e}".format(np.std(corrList))
-
-        return (len(corrList),mean,std)
+        return (str(ratio),mean,std)
 
 
     def write(self):
