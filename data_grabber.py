@@ -26,7 +26,7 @@ class dataGrabber(object):
 
         return True
 
-    def strip_search(self,name,para):
+    def strip_search(self,name,project,para):
         session = KITSearch(self.dbCreds)
         dic = session.probe_search_for_name(name)
         if para == "*":
@@ -39,7 +39,7 @@ class dataGrabber(object):
             dic = self.convert_keys(dic)
         return dic
 
-    def alibava_search(self,name,para,value):
+    def alibava_search(self,name,project,para,value):
         session = KITSearch(self.dbCreds)
         if para == "Voltage":
             dic = session.ali_search_for_name_voltage(name,int(value))

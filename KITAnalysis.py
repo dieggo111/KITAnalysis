@@ -58,7 +58,7 @@ class KITAnalysis(Ui_MainWindow):
 
         self.updateButton.clicked.connect(self.update_tab1)
         self.startButton.clicked.connect(self.start_tab1)
-        self.exportButton.clicked.connect(self.export_tab1)
+        self.exportButton.clicked.connect(lambda: self.exportTable(self.resultTab_tab1))
         self.addButton.clicked.connect(self.add_tab1)
         self.clearButton.clicked.connect(lambda: self.clear(self.projectTable))
         self.saveButton.clicked.connect(self.save_tab1)
@@ -69,7 +69,7 @@ class KITAnalysis(Ui_MainWindow):
         self.startButton_tab2.clicked.connect(self.start_tab2)
         self.clearButton_tab2.clicked.connect(lambda: self.clear(self.resultTab_tab2))
         self.updateButton_tab2.clicked.connect(self.update_tab2)
-        self.exportButton_tab2.clicked.connect(self.export_tab2)
+        self.exportButton_tab2.clicked.connect(lambda: self.exportTable(self.resultTab_tab2))
         self.searchResult_tab2 = []
         self.buttons = []
 
@@ -92,7 +92,7 @@ class KITAnalysis(Ui_MainWindow):
 
         # get data
         grabber = dataGrabber(self.db_config)
-        data = grabber.alibava_search(self.nameBox_tab1.text(),self.paraCombo_tab1.currentText(),self.valueBox_tab1.text())
+        data = grabber.alibava_search(self.nameBox_tab1.text(),self.projectCombo_tab1.currentText(),self.paraCombo_tab1.currentText(),self.valueBox_tab1.text())
         if data == {}:
             self.statusbar.showMessage("Couldn't find data that met the requirements...")
         else:
@@ -109,7 +109,7 @@ class KITAnalysis(Ui_MainWindow):
 
         # get data
         grabber = dataGrabber(self.db_config)
-        dic = grabber.strip_search(self.nameBox_tab2.text(),self.paraCombo_tab2.currentText())
+        dic = grabber.strip_search(self.nameBox_tab2.text(),self.projectCombo_tab2.currentText(),self.paraCombo_tab2.currentText())
         sm = strip_mean(self.limitDic)
         for sec in dic:
             self.write_to_table(sm.getMean(dic[sec]),self.resultTab_tab2)
@@ -149,7 +149,7 @@ class KITAnalysis(Ui_MainWindow):
                 tab.setItem(rowPosition,self.tab2["name"],QTableWidgetItem(result[0]["name"]))
                 tab.setItem(rowPosition,self.tab2["project"],QTableWidgetItem(result[0]["project"]))
                 tab.setItem(rowPosition,self.tab2["pid"],QTableWidgetItem(str(result[0]["PID"])))
-                tab.setItem(rowPosition,self.tab2["fluence"],QTableWidgetItem(result[0]["fluence"] + " (" + result[0]["particletype"]))
+                tab.setItem(rowPosition,self.tab2["fluence"],QTableWidgetItem(result[0]["fluence"] + " " + result[0]["particletype"]))
                 tab.setItem(rowPosition,self.tab2["para"],QTableWidgetItem(result[0]["paraY"]))
                 tab.setItem(rowPosition,self.tab2["mean"],QTableWidgetItem(result[1][1]))
                 tab.setItem(rowPosition,self.tab2["std"],QTableWidgetItem(result[1][2]))
@@ -191,31 +191,22 @@ class KITAnalysis(Ui_MainWindow):
         self.start_tab2()
         return True
 
-    def export_tab1(self):
-        # send save request
+    def exportTable(self,tab):
         x = []
-        y = self.resultTab_tab1.columnCount()-2
-        for row in range(0,self.resultTab_tab1.rowCount()):
-            for col in range(0,self.resultTab_tab1.columnCount()-1):
-                x.append(self.resultTab_tab1.item(row,col).text())
+        if tab == self.resultTab_tab1:
+            y = tab.columnCount()-2
+            for row in range(0,tab.rowCount()):
+                for col in range(0,tab.columnCount()-1):
+                    x.append(tab.item(row,col).text())
+            self.write(x,y,path=self.pathBox_tab1.text(),name=self.projectBox_tab1.text())
 
-        self.write(x,y,path=self.pathBox_tab1.text(),name=self.projectBox_tab1.text())
-        return True
+        elif tab == self.resultTab_tab2:
+            y = tab.columnCount()-3
+            for row in range(0,tab.rowCount()):
+                for col in range(0,tab.columnCount()-2):
+                    x.append(tab.item(row,col).text())
+            self.write(x,y,path=self.pathBox_tab2.text(),name=self.nameBox_tab2.text())
 
-    def export_tab2(self):
-        x = []
-        y = []
-        err = []
-        itemList = self.isChecked(self.resultTab_tab2,8)
-        for row in range(0,self.resultTab_tab2.rowCount()):
-            if row in itemList:
-                # strip parameter
-                x.append(self.resultTab_tab2.item(row,4).text())
-                # mean value
-                y.append(self.resultTab_tab2.item(row,5).text())
-                # std deviation
-                err.append(self.resultTab_tab2.item(row,6).text())
-        self.write(x,y,opt=err,path=self.pathBox.text(),name=self.resultTab_tab2.item(itemList[0],0).text())
         return True
 
     def isChecked(self,tab,col):
