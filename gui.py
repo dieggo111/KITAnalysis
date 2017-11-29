@@ -282,7 +282,7 @@ class Ui_MainWindow(object):
         item = self.resultTab_tab1.horizontalHeaderItem(6)
         item.setText(_translate("MainWindow", "Seed Signal"))
         item = self.resultTab_tab1.horizontalHeaderItem(7)
-        item.setText(_translate("MainWindow", "Draw"))
+        item.setText(_translate("MainWindow", ""))
         self.projectLabel3_tab1.setText(_translate("MainWindow", "Current Project"))
         self.drawButton.setText(_translate("MainWindow", "Draw Project"))
         self.exportButton.setText(_translate("MainWindow", "Export to File"))

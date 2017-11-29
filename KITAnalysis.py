@@ -21,7 +21,13 @@ class KITAnalysis(Ui_MainWindow):
         self.setupUi(dialog)
 
         # load gloabals and default values
-        settings = KITConfig("Resources\\Settings.cfg")
+        if not os.path.exists(os.path.join(os.getcwd(),"cfg")):
+            os.mkdir("cfg")
+        if not os.path.exists(os.path.join(os.getcwd(),"output")):
+            os.mkdir("output")
+
+
+        settings = KITConfig(os.path.join("Resources","Settings.cfg"))
         self.cfgFolder = settings["Globals", "cfgPath"]
         self.limitDic = settings["DefaultParameters", "Limits"]
         self.defaultCfgDic = settings["DefaultCfgs"]
@@ -55,7 +61,7 @@ class KITAnalysis(Ui_MainWindow):
                      "preview"      : 8}
 
         self.projectTable.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        self.resultTab_tab1.setColumnWidth(self.tab1["check"],68)
+        self.resultTab_tab1.setColumnWidth(self.tab1["check"],40)
 
         self.updateButton.clicked.connect(self.update_tab1)
         self.startButton.clicked.connect(self.start_tab1)
@@ -99,8 +105,8 @@ class KITAnalysis(Ui_MainWindow):
                                           self.valueBox_tab1.text())
             if data == {}:
                 raise ValueError
-            self.statusbar.showMessage("Search completed...")
             self.write_to_table(data, self.resultTab_tab1)
+            self.statusbar.showMessage("Search completed...")
         except:
             self.statusbar.showMessage("Couldn't find data that met the requirements...")
 
@@ -144,17 +150,17 @@ class KITAnalysis(Ui_MainWindow):
                     tab.setItem(rowPosition,self.tab1["seed"],QTableWidgetItem(result[sec]["seed"]))
                     self.seedADC.update({sec : round(float(result[sec]["seed"])/float(result[sec]["gain"]))})
 
-                    # add checkboxes
-                    chkBoxItem = QTableWidgetItem()
-                    chkBoxItem.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-                    chkBoxItem.setCheckState(QtCore.Qt.Checked)
-                    tab.setItem(rowPosition,self.tab1["check"],chkBoxItem)
+                    # add checkboxes and center them in cell
+                    pWidget = QWidget()
+                    pCheckBox = QCheckBox()
+                    pLayout = QHBoxLayout(pWidget)
+                    pLayout.addWidget(pCheckBox)
+                    pLayout.setAlignment(QtCore.Qt.AlignCenter)
+                    pLayout.setContentsMargins(0,0,0,0)
+                    pCheckBox.setCheckState(QtCore.Qt.Checked)
+                    tab.setCellWidget(rowPosition,self.tab1["check"],pWidget)
 
             elif tab == self.resultTab_tab2:
-                # if result[0].getFluenceP() == None:
-                #     fluence = 0
-                # else:
-                #     fluence = result[0].getFluenceP()
                 rowPosition = tab.rowCount()
                 tab.insertRow(rowPosition)
                 tab.setItem(rowPosition,self.tab2["name"],QTableWidgetItem(result[0]["name"]))
@@ -209,7 +215,7 @@ class KITAnalysis(Ui_MainWindow):
             for row in range(0,tab.rowCount()):
                 for col in range(0,tab.columnCount()-1):
                     x.append(tab.item(row,col).text())
-            if x = []:
+            if x == []:
                 self.statusbar.showMessage("There is nothing to export...")
             else:
                 self.write(x,y,path=self.pathBox_tab1.text(),name=self.projectBox_tab1.text())
@@ -219,7 +225,7 @@ class KITAnalysis(Ui_MainWindow):
             for row in range(0,tab.rowCount()):
                 for col in range(0,tab.columnCount()-2):
                     x.append(tab.item(row,col).text())
-            if x = []:
+            if x == []:
                 self.statusbar.showMessage("There is nothing to export...")
             else:
                 self.write(x,y,path=self.pathBox_tab2.text(),name=self.nameBox_tab2.text())
@@ -229,7 +235,8 @@ class KITAnalysis(Ui_MainWindow):
     def isChecked(self,tab,col):
         itemList = []
         for i in range(tab.rowCount()):
-            if tab.item(i, col).checkState() == QtCore.Qt.Checked:
+            parent = tab.cellWidget(i, col)
+            if parent.findChild(QCheckBox).checkState() == QtCore.Qt.Checked:
                 itemList.append(i)
         return itemList
 
@@ -285,10 +292,9 @@ class KITAnalysis(Ui_MainWindow):
 
     def draw_thread(self):
         t = threading.Thread(target=self.draw)
-        t.run()
         try:
-            t.join()
-        except(RuntimeError):
+            t.run()
+        except:
             pass
         return True
 
@@ -304,14 +310,9 @@ class KITAnalysis(Ui_MainWindow):
             kPlot = KITPlot(self.projectList,
                             defaultCfg=self.defaultCfgDic["SignalAnnealing"],
                             name=self.projectBox_tab1.text())
-        try:
-            kPlot.draw("matplotlib")
-            kPlot.saveCanvas()
-            kPlot.showCanvas()
-        except(KeyError):
-            self.statusbar.showMessage("An error occured while reading cfg. Delete old file or reset EntryList...")
-        except:
-            self.statusbar.showMessage("An error occured while plotting...")
+        kPlot.draw("matplotlib")
+        kPlot.saveCanvas()
+        kPlot.showCanvas()
         return True
 
     def write(self,x,y,z=None,path=None,name=None):
