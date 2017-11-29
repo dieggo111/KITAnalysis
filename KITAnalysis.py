@@ -10,17 +10,18 @@ from pathlib import Path
 sys.path.insert(0, Path(os.getcwd()).parents[0])
 from KITPlot import KITPlot
 from KITPlot.KITConfig import KITConfig
+import threading
 
 class KITAnalysis(Ui_MainWindow):
 
     def __init__(self, dialog):
 
+        # init gui
         Ui_MainWindow.__init__(self)
         self.setupUi(dialog)
 
         # load gloabals and default values
         settings = KITConfig("Resources\\Settings.cfg")
-
         self.cfgFolder = settings["Globals", "cfgPath"]
         self.limitDic = settings["DefaultParameters", "Limits"]
         self.defaultCfgDic = settings["DefaultCfgs"]
@@ -62,7 +63,7 @@ class KITAnalysis(Ui_MainWindow):
         self.addButton.clicked.connect(self.add_tab1)
         self.clearButton.clicked.connect(lambda: self.clear(self.projectTable))
         self.saveButton.clicked.connect(self.save_tab1)
-        self.drawButton.clicked.connect(self.draw)
+        self.drawButton.clicked.connect(self.draw_thread)
         self.projectList = []
 
         # tab 2
@@ -85,19 +86,23 @@ class KITAnalysis(Ui_MainWindow):
             self.limitTable.setItem(0,column,QTableWidgetItem("{:0.1e}".format(self.limitDic[self.limitTable.horizontalHeaderItem(column).text()][0])))
             self.limitTable.setItem(1,column,QTableWidgetItem("{:0.1e}".format(self.limitDic[self.limitTable.horizontalHeaderItem(column).text()][1])))
 
-
     def start_tab1(self):
         # reset tabel
         self.clear(self.resultTab_tab1)
 
-        # get data
-        grabber = dataGrabber(self.db_config)
-        data = grabber.alibava_search(self.nameBox_tab1.text(),self.projectCombo_tab1.currentText(),self.paraCombo_tab1.currentText(),self.valueBox_tab1.text())
-        if data == {}:
-            self.statusbar.showMessage("Couldn't find data that met the requirements...")
-        else:
+        # search for data and visualize it
+        try:
+            grabber = dataGrabber(self.db_config)
+            data = grabber.alibava_search(self.nameBox_tab1.text(),
+                                          self.projectCombo_tab1.currentText(),
+                                          self.paraCombo_tab1.currentText(),
+                                          self.valueBox_tab1.text())
+            if data == {}:
+                raise ValueError
             self.statusbar.showMessage("Search completed...")
             self.write_to_table(data, self.resultTab_tab1)
+        except:
+            self.statusbar.showMessage("Couldn't find data that met the requirements...")
 
     def start_tab2(self):
         """
@@ -107,12 +112,18 @@ class KITAnalysis(Ui_MainWindow):
         # reset table
         self.clear(self.resultTab_tab2)
 
-        # get data
-        grabber = dataGrabber(self.db_config)
-        dic = grabber.strip_search(self.nameBox_tab2.text(),self.projectCombo_tab2.currentText(),self.paraCombo_tab2.currentText())
-        sm = strip_mean(self.limitDic)
-        for sec in dic:
-            self.write_to_table(sm.getMean(dic[sec]),self.resultTab_tab2)
+        try:
+            # get data
+            grabber = dataGrabber(self.db_config)
+            dic = grabber.strip_search(self.nameBox_tab2.text(),
+                                       self.projectCombo_tab2.currentText(),
+                                       self.paraCombo_tab2.currentText())
+            sm = strip_mean(self.limitDic)
+            for sec in dic:
+                self.write_to_table(sm.getMean(dic[sec]),self.resultTab_tab2)
+            self.statusbar.showMessage("Search completed...")
+        except:
+            self.statusbar.showMessage("Couldn't find data that met the requirements...")
 
     def write_to_table(self, result, tab):
         self.seedADC = {}
@@ -198,14 +209,20 @@ class KITAnalysis(Ui_MainWindow):
             for row in range(0,tab.rowCount()):
                 for col in range(0,tab.columnCount()-1):
                     x.append(tab.item(row,col).text())
-            self.write(x,y,path=self.pathBox_tab1.text(),name=self.projectBox_tab1.text())
+            if x = []:
+                self.statusbar.showMessage("There is nothing to export...")
+            else:
+                self.write(x,y,path=self.pathBox_tab1.text(),name=self.projectBox_tab1.text())
 
         elif tab == self.resultTab_tab2:
             y = tab.columnCount()-3
             for row in range(0,tab.rowCount()):
                 for col in range(0,tab.columnCount()-2):
                     x.append(tab.item(row,col).text())
-            self.write(x,y,path=self.pathBox_tab2.text(),name=self.nameBox_tab2.text())
+            if x = []:
+                self.statusbar.showMessage("There is nothing to export...")
+            else:
+                self.write(x,y,path=self.pathBox_tab2.text(),name=self.nameBox_tab2.text())
 
         return True
 
@@ -264,6 +281,15 @@ class KITAnalysis(Ui_MainWindow):
         for i,graph in enumerate(self.projectList):
             self.write(graph[0],graph[1],path=newPath,name=self.projectTable.item(i,0).text())
         self.statusbar.showMessage("Project saved...")
+        return True
+
+    def draw_thread(self):
+        t = threading.Thread(target=self.draw)
+        t.run()
+        try:
+            t.join()
+        except(RuntimeError):
+            pass
         return True
 
     def draw(self):

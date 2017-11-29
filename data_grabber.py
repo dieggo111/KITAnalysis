@@ -16,19 +16,9 @@ class dataGrabber(object):
         self.__annealing_norm = 1
         self.dbCreds = credentials
 
-    def output(self):
-
-        print("{:<20} {:<15} {:<15} {:<15} {:<15} {:<15} {:<15}"\
-              .format("SensorName","Project","Run","Voltage","Gain","Annealing","SeedSignal"))
-        for foo in self.__searchList:
-            print("{:<20} {:<15} {:<15} {:<15} {:<15} {:<15} {:<15}"\
-                  .format(*list(foo.values())))
-
-        return True
-
     def strip_search(self,name,project,para):
         session = KITSearch(self.dbCreds)
-        dic = session.probe_search_for_name(name)
+        dic = session.probe_search_for_name(name,project)
         if para == "*":
             # get rid of unanalyzed sections
             dic = self.pop_items(dic,"IVCV")
@@ -42,13 +32,13 @@ class dataGrabber(object):
     def alibava_search(self,name,project,para,value):
         session = KITSearch(self.dbCreds)
         if para == "Voltage":
-            dic = session.ali_search_for_name_voltage(name,int(value))
+            dic = session.ali_search_for_name_voltage(name,int(value),project)
             # get rid of unanalyzed sections
             dic = self.pop_items(dic,"unanalyzed")
             # KITAnalysis expects values to be str type
             dic = self.convert_keys(dic)
         elif para == "Annealing":
-            dic = session.ali_search_for_name_annealing(name,int(value))
+            dic = session.ali_search_for_name_annealing(name,int(value),project)
             dic = self.pop_items(dic)
             dic = self.convert_keys(dic)
         return dic
@@ -72,6 +62,16 @@ class dataGrabber(object):
         for run in delList:
             dic.pop(run)
         return dic
+
+    def output(self):
+
+        print("{:<20} {:<15} {:<15} {:<15} {:<15} {:<15} {:<15}"\
+              .format("SensorName","Project","Run","Voltage","Gain","Annealing","SeedSignal"))
+        for foo in self.__searchList:
+            print("{:<20} {:<15} {:<15} {:<15} {:<15} {:<15} {:<15}"\
+                  .format(*list(foo.values())))
+
+        return True
 
 if __name__ == '__main__':
 

@@ -250,7 +250,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -347,7 +347,7 @@ class Ui_MainWindow(object):
         self.paraCombo_tab2.setItemText(5, _translate("MainWindow", "CC"))
         self.paraCombo_tab2.setItemText(6, _translate("MainWindow", "C_int"))
         self.projectCombo_tab2.setItemText(0, _translate("MainWindow", "HPK_2S"))
-        self.projectCombo_tab2.setItemText(1, _translate("MainWindow", "HPK2S_II"))
+        self.projectCombo_tab2.setItemText(1, _translate("MainWindow", "HPK_2S_II"))
         self.projectLabel_tab2.setText(_translate("MainWindow", "Strip Parameter"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Strip Mean Calculator"))
         self.para_label_2.setText(_translate("MainWindow", "Created by Marius Metzler"))
