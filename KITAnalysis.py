@@ -10,9 +10,10 @@ from pathlib import Path
 sys.path.insert(0, Path(os.getcwd()).parents[0])
 from KITPlot import KITPlot
 from KITPlot.KITConfig import KITConfig
+from Resources.InitGlobals import InitGlobals
 import threading
 
-class KITAnalysis(Ui_MainWindow):
+class KITAnalysis(Ui_MainWindow,InitGlobals):
 
     def __init__(self, dialog):
 
@@ -20,46 +21,11 @@ class KITAnalysis(Ui_MainWindow):
         Ui_MainWindow.__init__(self)
         self.setupUi(dialog)
 
-        # load gloabals and default values
-        if not os.path.exists(os.path.join(os.getcwd(),"cfg")):
-            os.mkdir("cfg")
-        if not os.path.exists(os.path.join(os.getcwd(),"output")):
-            os.mkdir("output")
+        # create cfg/output folder and settings file if not existing, load globals, defaults and credentials
+        self.initGlobals()
+        self.setDefValues()
 
-
-        settings = KITConfig(os.path.join("Resources","Settings.cfg"))
-        self.cfgFolder = settings["Globals", "cfgPath"]
-        self.limitDic = settings["DefaultParameters", "Limits"]
-        self.defaultCfgDic = settings["DefaultCfgs"]
-        self.setDefValues(settings)
-
-        # load db credentials
-        try:
-            cnxConf = KITConfig(settings["Globals", "credPath"])
-            self.db_config = cnxConf["database"]
-        except:
-            raise ValueError("No credentials file found.")
-
-        # tab 1
-        self.tab1 = {"name"         : 0,
-                     "project"      : 1,
-                     "run"          : 2,
-                     "voltage"      : 3,
-                     "annealing"    : 4,
-                     "gain"         : 5,
-                     "seed"         : 6,
-                     "check"        : 7}
-
-        self.tab2 = {"name"         : 0,
-                     "project"      : 1,
-                     "pid"          : 2,
-                     "fluence"      : 3,
-                     "para"         : 4,
-                     "mean"         : 5,
-                     "std"          : 6,
-                     "discard"      : 7,
-                     "preview"      : 8}
-
+        # tab1
         self.projectTable.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         self.resultTab_tab1.setColumnWidth(self.tab1["check"],40)
 
@@ -80,13 +46,13 @@ class KITAnalysis(Ui_MainWindow):
         self.searchResult_tab2 = []
         self.buttons = []
 
-    def setDefValues(self,settings):
+    def setDefValues(self):
         self.valueBox_tab1.setText("600")
         self.nameBox_tab1.setText("KIT_Test_07")
-        self.pathBox_tab1.setText(settings["DefaultParameters", "OutputPath"])
+        self.pathBox_tab1.setText(self.outputPath)
         self.projectBox_tab1.setText("NewProject")
         self.nameBox_tab2.setText("KIT_Test_23")
-        self.pathBox_tab2.setText(settings["DefaultParameters", "OutputPath"])
+        self.pathBox_tab2.setText(self.outputPath)
 
         for column in range(0,self.limitTable.columnCount()):
             self.limitTable.setItem(0,column,QTableWidgetItem("{:0.1e}".format(self.limitDic[self.limitTable.horizontalHeaderItem(column).text()][0])))
@@ -190,6 +156,7 @@ class KITAnalysis(Ui_MainWindow):
             tab.setRowCount(0)
 
     def update_tab1(self):
+        print(self.seedADC)
         for i in range(0,self.resultTab_tab1.rowCount()):
             new_gain = int(self.resultTab_tab1.item(i,self.tab1["gain"]).text())
             run = int(self.resultTab_tab1.item(i,self.tab1["run"]).text())
