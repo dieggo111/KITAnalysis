@@ -16,7 +16,7 @@ class InitGlobals(object):
         if not os.path.isfile(os.path.join(cwd,"Resources","Settings.cfg")):
             print("Created settings file...")
             new = KITConfig()
-            new.Dir("Resources\\")
+            new.Dir("Resources")
             new.setDict({
                             "Globals": {
                                 "CredPath"  : ""},
