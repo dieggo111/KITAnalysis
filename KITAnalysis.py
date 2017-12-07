@@ -156,7 +156,6 @@ class KITAnalysis(Ui_MainWindow,InitGlobals):
             tab.setRowCount(0)
 
     def update_tab1(self):
-        print(self.seedADC)
         for i in range(0,self.resultTab_tab1.rowCount()):
             new_gain = int(self.resultTab_tab1.item(i,self.tab1["gain"]).text())
             run = int(self.resultTab_tab1.item(i,self.tab1["run"]).text())
