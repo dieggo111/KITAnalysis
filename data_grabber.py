@@ -30,6 +30,7 @@ class dataGrabber(object):
         return dic
 
     def alibava_search(self,name,project,para,value):
+        print(para)
         session = KITSearch(self.dbCreds)
         if para == "Voltage":
             dic = session.ali_search_for_name_voltage(name,int(value),project)
@@ -39,7 +40,7 @@ class dataGrabber(object):
             dic = self.convert_keys(dic)
         elif para == "Annealing":
             dic = session.ali_search_for_name_annealing(name,int(value),project)
-            dic = self.pop_items(dic)
+            dic = self.pop_items(dic,"unanalyzed")
             dic = self.convert_keys(dic)
         return dic
 
