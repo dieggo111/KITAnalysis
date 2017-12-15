@@ -48,7 +48,7 @@ class KITAnalysis(Ui_MainWindow,InitGlobals):
 
     def setDefValues(self):
         self.valueBox_tab1.setText("600")
-        self.nameBox_tab1.setText("KIT_Test_07")
+        self.nameBox_tab1.setText("FZ320Y_04_Badd_1")
         self.pathBox_tab1.setText(self.outputPath)
         self.projectBox_tab1.setText("NewProject")
         self.nameBox_tab2.setText("KIT_Test_23")
@@ -113,9 +113,8 @@ class KITAnalysis(Ui_MainWindow,InitGlobals):
                     tab.setItem(rowPosition,self.tab1["voltage"],QTableWidgetItem(result[sec]["voltage"]))
                     tab.setItem(rowPosition,self.tab1["annealing"],QTableWidgetItem(result[sec]["annealing"]))
                     tab.setItem(rowPosition,self.tab1["gain"],QTableWidgetItem(result[sec]["gain"]))
-                    tab.setItem(rowPosition,self.tab1["seed"],QTableWidgetItem(result[sec]["seed"]))
-                    self.seedADC.update({sec : round(float(result[sec]["seed"])/float(result[sec]["gain"]))})
-
+                    tab.setItem(rowPosition,self.tab1["seed"],QTableWidgetItem(str(int(result[sec]["seed"])*int(result[sec]["gain"]))))
+                    self.seedADC.update({sec : int(result[sec]["seed"])})
                     # add checkboxes and center them in cell
                     pWidget = QWidget()
                     pCheckBox = QCheckBox()
