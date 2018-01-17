@@ -35,7 +35,8 @@ class KITAnalysis(Ui_MainWindow,InitGlobals):
         self.addButton.clicked.connect(self.add_tab1)
         self.clearButton.clicked.connect(lambda: self.clear(self.projectTable))
         self.saveButton.clicked.connect(self.save_tab1)
-        self.drawButton.clicked.connect(self.draw_thread)
+        # self.drawButton.clicked.connect(self.draw_thread)
+        self.drawButton.clicked.connect(self.draw)
         self.projectList = []
 
         # tab 2
@@ -48,7 +49,7 @@ class KITAnalysis(Ui_MainWindow,InitGlobals):
 
     def setDefValues(self):
         self.valueBox_tab1.setText("600")
-        self.nameBox_tab1.setText("FZ320Y_04_Badd_1")
+        self.nameBox_tab1.setText("KIT_Test_07")
         self.pathBox_tab1.setText(self.outputPath)
         self.projectBox_tab1.setText("NewProject")
         self.nameBox_tab2.setText("KIT_Test_23")
@@ -255,29 +256,40 @@ class KITAnalysis(Ui_MainWindow,InitGlobals):
         self.statusbar.showMessage("Project saved...")
         return True
 
-    def draw_thread(self):
-        t = threading.Thread(target=self.draw)
-        try:
-            t.run()
-        except:
-            pass
-        return True
+    # def draw_thread(self):
+    #     t = threading.Thread(target=self.draw)
+    #     t.run()
+    #     # try:
+    #         # t.run()
+    #     # except:
+    #     #     pass
+    #     return True
 
     def draw(self):
         """ projectList contains lists for each graph to be drawn looking like
             [voltage,annealing,seed]
         """
+        # check if there's already a cfg file with the same name (this is
+        # causing a lot of problems because of the entryList in cfg file)
+        cfgName = self.projectBox_tab1.text() + ".cfg"
+        i = 1
+        while True:
+            if cfgName in os.listdir(os.path.join("cfg")):
+                cfgName = cfgName.replace(".cfg",str(i) + ".cfg")
+                i += 1
+            else:
+                break
+
         if self.paraCombo_tab1.currentText() == "Voltage":
             kPlot = KITPlot(self.projectList,
                             defaultCfg=self.defaultCfgDic["SignalVoltage"],
-                            name=self.projectBox_tab1.text())
+                            name=cfgName)
         elif self.paraCombo_tab1.currentText() == "Annealing":
             kPlot = KITPlot(self.projectList,
                             defaultCfg=self.defaultCfgDic["SignalAnnealing"],
-                            name=self.projectBox_tab1.text())
+                            name=cfgName)
         kPlot.draw("matplotlib")
-        kPlot.saveCanvas()
-        kPlot.showCanvas()
+        kPlot.showCanvas(save=True)
         return True
 
     def write(self,x,y,z=None,path=None,name=None):
