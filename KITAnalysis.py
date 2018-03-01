@@ -64,18 +64,18 @@ class KITAnalysis(Ui_MainWindow,InitGlobals):
         self.clear(self.resultTab_tab1)
 
         # search for data and visualize it
-        try:
-            grabber = dataGrabber(self.db_config)
-            data = grabber.alibava_search(self.nameBox_tab1.text(),
-                                          self.projectCombo_tab1.currentText(),
-                                          self.paraCombo_tab1.currentText(),
-                                          self.valueBox_tab1.text())
-            if data == {}:
-                raise ValueError
-            self.write_to_table(data, self.resultTab_tab1)
-            self.statusbar.showMessage("Search completed...")
-        except:
-            self.statusbar.showMessage("Couldn't find data that met the requirements...")
+        # try:
+        grabber = dataGrabber(self.db_config)
+        data = grabber.alibava_search(self.nameBox_tab1.text(),
+                                      self.projectCombo_tab1.currentText(),
+                                      self.paraCombo_tab1.currentText(),
+                                      self.valueBox_tab1.text())
+        if data == {}:
+            raise ValueError
+        self.write_to_table(data, self.resultTab_tab1)
+        self.statusbar.showMessage("Search completed...")
+        # except:
+        #     self.statusbar.showMessage("Couldn't find data that met the requirements...")
 
     def start_tab2(self):
         """
