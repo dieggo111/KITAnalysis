@@ -301,6 +301,7 @@ class Ui_MainWindow(object):
         self.projectCombo_tab1.setItemText(2, _translate("MainWindow", "CEC BabyStd"))
         self.projectCombo_tab1.setItemText(3, _translate("MainWindow", "CEC Badd"))
         self.projectCombo_tab1.setItemText(4, _translate("MainWindow", "CEC Bstd"))
+        self.projectCombo_tab1.setItemText(5, _translate("MainWindow", "CEC BPA"))
         self.projecLabel1_tab1.setText(_translate("MainWindow", "Project"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_1), _translate("MainWindow", "ALiBaVa Search Tool"))
         self.exportButton_tab2.setText(_translate("MainWindow", "Export"))
