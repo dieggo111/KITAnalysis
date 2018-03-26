@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'gui.ui'
+# Form implementation generated from reading ui file '.\gui.ui'
 #
 # Created by: PyQt5 UI code generator 5.9
 #
@@ -128,6 +128,7 @@ class Ui_MainWindow(object):
         self.projectCombo_tab1.addItem("")
         self.projectCombo_tab1.addItem("")
         self.projectCombo_tab1.addItem("")
+        self.projectCombo_tab1.addItem("")
         self.projecLabel1_tab1 = QtWidgets.QLabel(self.tab_1)
         self.projecLabel1_tab1.setGeometry(QtCore.QRect(170, 40, 91, 21))
         self.projecLabel1_tab1.setObjectName("projecLabel1_tab1")
@@ -240,6 +241,7 @@ class Ui_MainWindow(object):
         self.projectCombo_tab2.addItem("")
         self.projectCombo_tab2.addItem("")
         self.projectCombo_tab2.addItem("")
+        self.projectCombo_tab2.addItem("")
         self.projectLabel_tab2 = QtWidgets.QLabel(self.tab_2)
         self.projectLabel_tab2.setGeometry(QtCore.QRect(170, 40, 81, 21))
         self.projectLabel_tab2.setObjectName("projectLabel_tab2")
@@ -296,7 +298,7 @@ class Ui_MainWindow(object):
         self.clearButton.setText(_translate("MainWindow", "Clear Project"))
         self.addButton.setText(_translate("MainWindow", ">> Add to Project"))
         self.startButton.setText(_translate("MainWindow", "Start Search"))
-        self.projectCombo_tab1.setItemText(0, _translate("MainWindow", "HPK_2S_I"))
+        self.projectCombo_tab1.setItemText(0, _translate("MainWindow", "HPK_2S"))
         self.projectCombo_tab1.setItemText(1, _translate("MainWindow", "HPK_2S_II"))
         self.projectCombo_tab1.setItemText(2, _translate("MainWindow", "CEC BabyStd"))
         self.projectCombo_tab1.setItemText(3, _translate("MainWindow", "CEC Badd"))
@@ -354,11 +356,12 @@ class Ui_MainWindow(object):
         self.paraCombo_tab2.setItemText(4, _translate("MainWindow", "Pinhole"))
         self.paraCombo_tab2.setItemText(5, _translate("MainWindow", "CC"))
         self.paraCombo_tab2.setItemText(6, _translate("MainWindow", "C_int"))
-        self.projectCombo_tab2.setItemText(0, _translate("MainWindow", "HPK_2S_I"))
+        self.projectCombo_tab2.setItemText(0, _translate("MainWindow", "HPK_2S"))
         self.projectCombo_tab2.setItemText(1, _translate("MainWindow", "HPK_2S_II"))
         self.projectCombo_tab2.setItemText(2, _translate("MainWindow", "CEC BabyStd"))
         self.projectCombo_tab2.setItemText(3, _translate("MainWindow", "CEC Bstd"))
         self.projectCombo_tab2.setItemText(4, _translate("MainWindow", "CEC Badd"))
+        self.projectCombo_tab2.setItemText(5, _translate("MainWindow", "CEC BPA"))
         self.projectLabel_tab2.setText(_translate("MainWindow", "Strip Parameter"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Strip Mean Calculator"))
         self.para_label_2.setText(_translate("MainWindow", "Created by Marius Metzler"))
