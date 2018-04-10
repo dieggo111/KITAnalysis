@@ -57,7 +57,7 @@ class dataGrabber(object):
                 delList.append(sec)
             elif opt == "IVCV" and dic[sec]["paraY"] in ("C_tot", "I_tot"):
                 delList.append(sec)
-            elif opt in ("R_int","R_poly_dc","I_leak_dc","C_int","CC","Pinhole") and dic[sec]["paraY"] != opt:
+            elif opt in ("R_int","R_int_Ramp","R_poly_dc","I_leak_dc","C_int","CC","Pinhole") and dic[sec]["paraY"] != opt:
                 delList.append(sec)
         for run in delList:
             dic.pop(run)

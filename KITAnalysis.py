@@ -52,7 +52,7 @@ class KITAnalysis(Ui_MainWindow,InitGlobals):
         self.nameBox_tab1.setText("KIT_Test_07")
         self.pathBox_tab1.setText(self.outputPath)
         self.projectBox_tab1.setText("NewProject")
-        self.nameBox_tab2.setText("KIT_Test_23")
+        self.nameBox_tab2.setText("No_Pstop_06")
         self.pathBox_tab2.setText(self.outputPath)
 
         for column in range(0,self.limitTable.columnCount()):
@@ -85,18 +85,18 @@ class KITAnalysis(Ui_MainWindow,InitGlobals):
         # reset table
         self.clear(self.resultTab_tab2)
 
-        try:
-            # get data
-            grabber = dataGrabber(self.db_config)
-            dic = grabber.strip_search(self.nameBox_tab2.text(),
-                                       self.projectCombo_tab2.currentText(),
-                                       self.paraCombo_tab2.currentText())
-            sm = strip_mean(self.limitDic)
-            for sec in dic:
-                self.write_to_table(sm.getMean(dic[sec]),self.resultTab_tab2)
-            self.statusbar.showMessage("Search completed...")
-        except:
-            self.statusbar.showMessage("Couldn't find data that met the requirements...")
+        # try:
+        # get data
+        grabber = dataGrabber(self.db_config)
+        dic = grabber.strip_search(self.nameBox_tab2.text(),
+                                   self.projectCombo_tab2.currentText(),
+                                   self.paraCombo_tab2.currentText())
+        sm = strip_mean(self.limitDic)
+        for sec in dic:
+            self.write_to_table(sm.getMean(dic[sec]), self.resultTab_tab2)
+        self.statusbar.showMessage("Search completed...")
+        # except:
+        #     self.statusbar.showMessage("Couldn't find data that met the requirements...")
 
     def write_to_table(self, result, tab):
         self.seedADC = {}
@@ -160,7 +160,7 @@ class KITAnalysis(Ui_MainWindow,InitGlobals):
             new_gain = int(self.resultTab_tab1.item(i,self.tab1["gain"]).text())
             run = int(self.resultTab_tab1.item(i,self.tab1["run"]).text())
             new_seed = str(self.seedADC[run]*new_gain)
-            self.resultTab_tab1.setItem(i,self.tab1["seed"],QTableWidgetItem(new_seed))
+            self.resultTab_tab1.setItem(i,self.tab1["seed"],QTableWidgetItem(new_seed)) #pylint: disable=E0602
         self.statusbar.showMessage("Table updated...")
         return True
 

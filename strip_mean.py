@@ -29,7 +29,7 @@ class strip_mean(object):
         self.limitDic = limitDic
 
     def getMean(self,Input):
-
+        print(Input["dataY"])
         # dict with raw data
         if isinstance(Input, dict):
             fileOutput = self.calc(Input["dataY"],Input["paraY"])
@@ -81,8 +81,6 @@ class strip_mean(object):
             for val in data:
                 if self.limitDic[para][0]<abs(val)<self.limitDic[para][1]:
                     corrList.append(val)
-                else:
-                    pass
             ratio = round((len(data)-len(corrList))/len(data),2)
         mean = "{:0.3e}".format(np.mean(corrList))
         std = "{:0.3e}".format(np.std(corrList))
