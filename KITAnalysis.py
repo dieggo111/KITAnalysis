@@ -79,7 +79,7 @@ class KITAnalysis(Ui_MainWindow,InitGlobals):
 
     def start_tab2(self):
         """
-        dataGrabber().strip_search() returns dict[one dict per PID][measurement data and info]
+        dataGrabber().strip_search() returns dict[one dict per PID]???[measurement data and info]
         strip_mean().getMean(dict) returns (dict, (discard ratio, mean val, std error))
         """
         # reset table
@@ -92,6 +92,7 @@ class KITAnalysis(Ui_MainWindow,InitGlobals):
                                    self.projectCombo_tab2.currentText(),
                                    self.paraCombo_tab2.currentText())
         sm = strip_mean(self.limitDic)
+        dic = reshuffle_for_ramp(dic)
         for sec in dic:
             self.write_to_table(sm.getMean(dic[sec]), self.resultTab_tab2)
         self.statusbar.showMessage("Search completed...")
@@ -322,7 +323,48 @@ class KITAnalysis(Ui_MainWindow,InitGlobals):
             File.close()
             print ("Data written into %s" %(path+name+".txt"))
         return True
-
+        
+def reshuffle_for_ramp(dic):
+	
+	Voltage = -300	#Button wie bei ALiBaVa?
+	NewDataX = []
+	NewDataY = []
+	NewDataZ = []
+	DataList = []
+	newdic = {}
+	
+	for ProbeID in dic.keys():
+		NurProbeDic = dic[ProbeID]
+		VDaten = NurProbeDic["dataZ"]
+		Index = VDaten.index(Voltage)
+		print(Index)
+		R_Int_Liste = NurProbeDic["dataY"]
+		R_Int = R_Int_Liste[Index]
+		print(R_Int)
+		strip_list = NurProbeDic["dataX"]
+		stripnumber = strip_list[Index]
+		print (stripnumber)
+		
+		NewDataX.append(stripnumber)
+		NewDataY.append(R_Int)
+		NewDataZ.append(Voltage)
+		DataList.append(NewDataX)
+		DataList.append(NewDataY)
+		DataList.append(NewDataZ)
+		
+	InDic = ['dataX','dataY','dataZ']
+	newdic_without_ProbeID = dict(zip(InDic,DataList))
+	namevalue = NurProbeDic['name']
+	projectvalue = NurProbeDic['project']
+	fluencevalue = NurProbeDic['fluence']
+	particletypevalue = NurProbeDic['particletype']
+		
+	newdic_without_ProbeID.update({'paraY':'R_int_Ramp','paraX':'Strip', 'name':namevalue, 'project':projectvalue, 'fluence':fluencevalue, 'particletype':particletypevalue, 'PID':'3'})
+	newdic['3'] = newdic_without_ProbeID #ProbeID needed?
+	print("******************************\n")
+	print(newdic)
+	print("******************************\n")
+	return newdic
 
 if __name__ == '__main__':
 
