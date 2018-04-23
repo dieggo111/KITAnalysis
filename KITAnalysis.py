@@ -79,26 +79,24 @@ class KITAnalysis(Ui_MainWindow,InitGlobals):
 
     def start_tab2(self):
         """
-        dataGrabber().strip_search() returns dict[one dict per PID]???[measurement data and info]
+        dataGrabber().strip_search() returns dict[one dict per PID][measurement data and info]
         strip_mean().getMean(dict) returns (dict, (discard ratio, mean val, std error))
         """
         # reset table
         self.clear(self.resultTab_tab2)
 
-        try:
-            # get data
-            grabber = dataGrabber(self.db_config)
-            dic = grabber.strip_search(self.nameBox_tab2.text(),
-                                       self.projectCombo_tab2.currentText(),
-                                       self.paraCombo_tab2.currentText())
-            sm = strip_mean(self.limitDic)
-            print(dic)
-            # dic = reshuffle_for_ramp(dic)
-            for sec in dic:
-                self.write_to_table(sm.getMean(dic[sec]), self.resultTab_tab2)
-            self.statusbar.showMessage("Search completed...")
-        except:
-            self.statusbar.showMessage("Couldn't find data that met the requirements...")
+        # try:
+        # get data
+        grabber = dataGrabber(self.db_config)
+        dic = grabber.strip_search(self.nameBox_tab2.text(),
+                                   self.projectCombo_tab2.currentText(),
+                                   self.paraCombo_tab2.currentText())
+        sm = strip_mean(self.limitDic)
+        for sec in dic:
+            self.write_to_table(sm.getMean(dic[sec]), self.resultTab_tab2)
+        self.statusbar.showMessage("Search completed...")
+        # except:
+        #     self.statusbar.showMessage("Couldn't find data that met the requirements...")
 
     def write_to_table(self, result, tab):
         self.seedADC = {}
@@ -324,52 +322,6 @@ class KITAnalysis(Ui_MainWindow,InitGlobals):
             File.close()
             print ("Data written into %s" %(path+name+".txt"))
         return True
-
-def reshuffle_for_ramp(dic):
-	
-	#Define lists for fluences, voltages and for new dictionaries
-	fluence_list = []
-	fluence_list_pt = []
-	voltage_values = []
-	dictionary_list = []
-	
-	#Get all fluences as well as all possible voltages and construct fluence with particle type (pt)
-	for probe_id in dic.keys():
-		found_fluence = dic[probe_id]["fluence"]
-		if found_fluence not in fluence_list:
-			fluence_list.append(found_fluence)
-			particlefluence = str(found_fluence) + str(dic[probe_id]["particletype"])
-			fluence_list_pt.append(particlefluence)
-		for V in dic[probe_id]["dataZ"]:
-			if V not in voltage_values:
-				voltage_values.append(V)
-
-	for fluence in fluence_list:
-		
-		#Reset new_dic for every fluence
-		new_dic = {}
-		
-		#Fill the new dictionary with all voltages as keys and empty lists as value
-		for V in voltage_values:
-			new_dic[V] = []
-		
-		#For every probe_id in the source dict, if the fluence is right, append the R_int value to their respective voltage
-		for probe_id in dic.keys():
-			if fluence == dic[probe_id]["fluence"]:
-				R_int_list = dic[probe_id]["dataY"]
-				for x in range(len(R_int_list)):
-						R_int_value = R_int_list[x]
-						V = dic[probe_id]["dataZ"][x]
-						new_dic[V].append(R_int_value)
-						
-		#Write one dictionary for every fluence in a list
-		dictionary_list.append(new_dic)
-		
-	#zip fluence to their respective voltages and interstrip resistances
-	final_dict = dict(zip(fluence_list_pt, dictionary_list))
-	
-	return(final_dict)
-
 
 
 if __name__ == '__main__':
