@@ -62,15 +62,15 @@ class InitGlobals(object):
                      "annealing"    : 4,
                      "gain"         : 5,
                      "seed"         : 6,
-                     "check"        : 7}
+                     "obj"          : 7}
 
         self.tab2 = {"name"         : 0,
                      "project"      : 1,
                      "pid"          : 2,
-                     "V_bias"       : 3,
+                     "voltage"      : 3,
                      "fluence"      : 4,
                      "para"         : 5,
                      "mean"         : 6,
-                     "std"          : 7,
-                     "discard"      : 8,
-                     "preview"      : 9}
+                     "std_err"      : 7,
+                     "disc_ratio"   : 8,
+                     "obj"          : 9}

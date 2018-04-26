@@ -38,7 +38,7 @@ class DataGrabber(object):
                 data_lst = reshuffle_for_ramp(dic, para)
             else:
                 data_lst = reshuffle_for_strip(dic)
-        data_lst = get_mean(data_lst, limit_dic, para)
+        data_lst = get_mean(data_lst, limit_dic)
         return data_lst
 
     def alibava_search(self, name, project, para, value):
@@ -47,19 +47,16 @@ class DataGrabber(object):
         session = KITSearch(self.db_creds)
         if para == "Voltage":
             dic = session.ali_search_for_name_voltage(name, int(value), project)
-            # get rid of unanalyzed sections
-            dic = pop_items(dic, "unanalyzed", self.std_meas, self.strip_meas)
-            # KITAnalysis expects values to be str type
         elif para == "Annealing":
             dic = session.ali_search_for_name_annealing(name, int(value), project)
-            dic = pop_items(dic, "unanalyzed", self.std_meas, self.strip_meas)
-        return dic
+        dic = pop_items(dic, "unanalyzed", self.std_meas, self.strip_meas)
+        data_lst = reshuffle_for_alibava(dic)
+        return data_lst
 
 
 ############
 # Functions#
 ############
-
 
 def handle_asterisk(data):
     """Handles the shuffeling of a search with undefined parameter.
@@ -80,18 +77,18 @@ def handle_asterisk(data):
                + reshuffle_for_strip(strip_dict)
     return data_lst
 
-def get_mean(data, limit_dic, para):
+def get_mean(data, limit_dic):
     """Calculates mean value and std deviation of data.
     """
     for dic in data:
         corr_lst = []
         for val in dic["data"]:
             try:
-                if limit_dic[para][0] < abs(val) < limit_dic[para][1]:
+                if limit_dic[dic["para"]][0] < abs(val) < limit_dic[dic["para"]][1]:
                     corr_lst.append(val)
             except KeyError:
                 corr_lst.append(val)
-        dic["disc_ratio"] = round((len(dic["data"])-len(corr_lst))/len(dic["data"]), 2)
+        dic["disc_ratio"] = (len(dic["data"])-len(corr_lst))/len(dic["data"])
         dic["mean"] = "{:0.3e}".format(np.mean(corr_lst))
         dic["std_err"] = "{:0.3e}".format(np.std(corr_lst))
     return data
@@ -112,6 +109,23 @@ def pop_items(dic, opt, std_meas, strip_meas):
         dic.pop(run)
     return dic
 
+def reshuffle_for_alibava(data):
+    """Reshuffels data dict for ramp measurements in order to meet
+    specifications of app regarding alibava measurements.
+
+    Returns: [{measurment data for v_bais1}, {measurment data for v_bais2}, ...]
+    """
+    data_lst = []
+    for sec in data:
+        data_lst.append({"voltage" : data[sec]["voltage"],
+                         "run" : sec,
+                         "annealing" : data[sec]["annealing"],
+                         "gain" : data[sec]["gain"],
+                         "seed" : data[sec]["seed"],
+                         "fluence" : make_flu_par(data[sec]["fluence"], \
+                         data[sec]["particletype"])})
+    return data_lst
+
 def reshuffle_for_strip(data):
     """Reshuffels data dict for ramp measurements in order to meet
     specifications of app regarding strip measurements.
@@ -120,8 +134,8 @@ def reshuffle_for_strip(data):
     """
     data_lst = []
     for sec in data:
-        data_lst.append({"V_bias" : data[sec]["dataZ"][0],
-                         "PID" : data[sec]["PID"],
+        data_lst.append({"voltage" : data[sec]["dataZ"][0],
+                         "pid" : data[sec]["PID"],
                          "para" : data[sec]["paraY"],
                          "data" : data[sec]["dataY"],
                          "fluence" : make_flu_par(data[sec]["fluence"], \
@@ -153,7 +167,8 @@ def reshuffle_for_ramp(data, para=None):
     for flu, lst in ass_dict.items():
         v_r_dict = get_ramp_data(lst, voltage_values, data)
         for key, val in v_r_dict.items():
-            new_data.append({"V_bias" : key, "fluence" : flu, "data": val})
+            new_data.append({"voltage" : key, "fluence" : flu,
+                             "pid" : "-", "data": val})
     try:
         for dic in new_data:
             dic["para"] = para
@@ -184,10 +199,3 @@ def make_flu_par(flu, par):
     """
     flu_par = "{:.2e}".format(flu) + par
     return flu_par
-
-
-
-if __name__ == '__main__':
-
-    d = DataGrabber()
-    d.name_search_ali("Irradiation_04")

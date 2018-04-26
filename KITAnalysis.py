@@ -31,10 +31,10 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
 
         # tab1
         self.projectTable.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        self.resultTab_tab1.setColumnWidth(self.tab1["check"], 40)
+        self.resultTab_tab1.setColumnWidth(self.tab1["obj"], 58)
 
         self.updateButton.clicked.connect(self.update_tab1)
-        self.startButton.clicked.connect(self.start_tab1)
+        self.startButton.clicked.connect(lambda: self.start_search(self.resultTab_tab1))
         self.exportButton.clicked.connect(lambda: self.exportTable(self.resultTab_tab1))
         self.addButton.clicked.connect(self.add_tab1)
         self.clearButton.clicked.connect(lambda: self.clear(self.projectTable))
@@ -44,7 +44,10 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         self.seed_adc = {}
 
         # tab 2
-        self.startButton_tab2.clicked.connect(self.start_tab2)
+        self.resultTab_tab2.setColumnWidth(self.tab2["voltage"], 90)
+        self.resultTab_tab2.setColumnWidth(self.tab2["pid"], 90)
+        self.resultTab_tab2.setColumnWidth(self.tab2["obj"], 78)
+        self.startButton_tab2.clicked.connect(lambda: self.start_search(self.resultTab_tab2))
         self.clearButton_tab2.clicked.connect(lambda: self.clear(self.resultTab_tab2))
         self.updateButton_tab2.clicked.connect(self.update_tab2)
         self.exportButton_tab2.clicked.connect(lambda: self.exportTable(self.resultTab_tab2))
@@ -59,11 +62,12 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         self.nameBox_tab1.setText("KIT_Test_07")
         self.pathBox_tab1.setText(self.outputPath)
         self.projectBox_tab1.setText("NewProject")
+        # self.nameBox_tab2.setText("No_Pstop_06")
         self.nameBox_tab2.setText("No_Pstop_06")
         self.projectCombo_tab2.setCurrentIndex(self.projectCombo_tab2.findText(\
             "HPK_2S_II", QtCore.Qt.MatchFixedString))
         self.paraCombo_tab2.setCurrentIndex(self.paraCombo_tab2.findText(\
-            "C_int_Ramp", QtCore.Qt.MatchFixedString))
+            "R_int_Ramp", QtCore.Qt.MatchFixedString))
         self.pathBox_tab2.setText(self.outputPath)
 
         for column in range(0, self.limitTable.columnCount()):
@@ -72,124 +76,83 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
             self.limitTable.setItem(1, column, QTableWidgetItem("{:0.1e}".format(\
                 self.limit_dic[self.limitTable.horizontalHeaderItem(column).text()][1])))
 
-    def start_tab1(self):
-        """Executed when the start button of tab1 is hit.
+    def start_search(self, tab):
+        """Starts to search data from DB. Executed when the start button is hit.
+        Data are then sorted by DataGrabber class and visualized by writing them
+        into GUI table.
         """
-        # reset tabel
-        self.clear(self.resultTab_tab1)
-
-        # search for data and visualize it
+        self.clear(tab)
         try:
             grabber = DataGrabber(self.db_config)
-            data = grabber.alibava_search(self.nameBox_tab1.text(),
-                                          self.projectCombo_tab1.currentText(),
-                                          self.paraCombo_tab1.currentText(),
-                                          self.valueBox_tab1.text())
-            if data == {}:
-                raise ValueError
-            self.write_to_table(data, self.resultTab_tab1)
-            self.statusbar.showMessage("Search completed...")
-        except ValueError:
-            self.statusbar.showMessage("Couldn't find data that met the requirements...")
-
-    def start_tab2(self):
-        """
-        dataGrabber().strip_search() returns dict[one dict per PID]???[measurement data and info]
-        strip_mean().getMean(dict) returns (dict, (discard ratio, mean val, std error))
-        """
-        # reset table
-        self.clear(self.resultTab_tab2)
-
-        try:
-        # get data
-            grabber = DataGrabber(self.db_config)
-            data_lst = grabber.strip_search(self.nameBox_tab2.text(),
-                                            self.projectCombo_tab2.currentText(),
-                                            self.paraCombo_tab2.currentText(),
-                                            self.limit_dic)
-            if data_lst == []:
+            if tab == self.resultTab_tab1:
+                data_lst = grabber.alibava_search(self.nameBox_tab1.text(),
+                                                  self.projectCombo_tab1.currentText(),
+                                                  self.paraCombo_tab1.currentText(),
+                                                  self.valueBox_tab1.text())
+            if tab == self.resultTab_tab2:
+                data_lst = grabber.strip_search(self.nameBox_tab2.text(),
+                                                self.projectCombo_tab2.currentText(),
+                                                self.paraCombo_tab2.currentText(),
+                                                self.limit_dic)
+            if data_lst == {}:
                 raise ValueError
             for dic in data_lst:
-                self.write_to_table(dic, self.resultTab_tab2)
+                self.write_to_table(dic, tab)
             self.statusbar.showMessage("Search completed...")
         except ValueError:
             self.statusbar.showMessage("Couldn't find data that met the requirements...")
 
-    def write_to_table(self, data_dict, tab, result=None, opt_para=None):
+    def write_to_table(self, data_dict, tab):
         """ Fill table with data.
         """
         dic = convert_dict(data_dict)
+        row_position = tab.rowCount()
+        tab.insertRow(row_position)
 
-        # fill table with data
         if tab == self.resultTab_tab1:
-            for sec in dic:
-                row_position = tab.rowCount()
-                tab.insertRow(row_position)
-                tab.setItem(row_position, self.tab1["name"],
-                            QTableWidgetItem(dic[sec]["name"]))
-                tab.setItem(row_position, self.tab1["project"],
-                            QTableWidgetItem(dic[sec]["project"]))
-                tab.setItem(row_position, self.tab1["run"],
-                            QTableWidgetItem(sec))
-                tab.setItem(row_position, self.tab1["voltage"],
-                            QTableWidgetItem(dic[sec]["voltage"]))
-                tab.setItem(row_position, self.tab1["annealing"],
-                            QTableWidgetItem(dic[sec]["annealing"]))
-                tab.setItem(row_position, self.tab1["gain"],
-                            QTableWidgetItem(dic[sec]["gain"]))
-                tab.setItem(row_position, self.tab1["seed"],
-                            QTableWidgetItem(str(int(dic[sec]["seed"])*int(dic[sec]["gain"]))))
-                self.seed_adc.update({sec : int(result[sec]["seed"])})
-                # add checkboxes and center them in cell
-                add_checkbox(tab, row_position)
-
-
+            ass_dict = self.tab1
+            name = self.nameBox_tab1.text()
+            project = self.projectCombo_tab1.currentText()
+            add_checkbox(tab, row_position, self.tab1["obj"])
+            self.resultTab_tab1.setColumnWidth(self.tab1["obj"], 47)
         if tab == self.resultTab_tab2:
-            row_position = tab.rowCount()
-            tab.insertRow(row_position)
-            tab.setItem(row_position, self.tab2["name"],
-                        QTableWidgetItem(self.nameBox_tab2.text()))
-            tab.setItem(row_position, self.tab2["project"],
-                        QTableWidgetItem(self.projectCombo_tab2.currentText()))
-            tab.setItem(row_position, self.tab2["fluence"],
-                        QTableWidgetItem(dic["fluence"]))
-            tab.setItem(row_position, self.tab2["V_bias"],
-                        QTableWidgetItem(dic["V_bias"]))
-            tab.setItem(row_position, self.tab2["para"],
-                        QTableWidgetItem(dic["para"]))
-            tab.setItem(row_position, self.tab2["mean"],
-                        QTableWidgetItem(dic["mean"]))
-            tab.setItem(row_position, self.tab2["std"],
-                        QTableWidgetItem(dic["std_err"]))
-            tab.setItem(row_position, self.tab2["discard"],
-                        QTableWidgetItem(dic["disc_ratio"]))
-            try:
-                tab.setItem(row_position, self.tab2["pid"],
-                            QTableWidgetItem(dic["PID"]))
-            except KeyError:
-                tab.setItem(row_position, self.tab2["pid"],
-                            QTableWidgetItem("-"))
-            # add buttons
+            ass_dict = self.tab2
+            name = self.nameBox_tab2.text()
+            project = self.projectCombo_tab2.currentText()
             add_buttons(self.resultTab_tab2, self.buttons,
-                        row_position, self.tab2["preview"],
+                        row_position, self.tab2["obj"],
                         "Preview", self.preview, data_dict)
+
+        for col in ass_dict:
+            if col == "name":
+                tab.setItem(row_position, ass_dict[col],
+                            QTableWidgetItem(name))
+            elif col == "project":
+                tab.setItem(row_position, ass_dict[col],
+                            QTableWidgetItem(project))
+            elif col == "seed":
+                tab.setItem(row_position, ass_dict["seed"],
+                            QTableWidgetItem(str(round(data_dict["seed"]*data_dict["gain"]))))
+                self.seed_adc.update({data_dict["run"] : data_dict["seed"]})
+            elif col == "obj":
+                pass
+            else:
+                tab.setItem(row_position, ass_dict[col],
+                            QTableWidgetItem(dic[col]))
 
 
     def clear(self, tab):
         if tab == self.projectTable:
             self.projectList = []
-            tab.setRowCount(0)
         elif tab == self.resultTab_tab2:
-            tab.setRowCount(0)
             self.buttons = []
-        elif tab == self.resultTab_tab1:
-            tab.setRowCount(0)
+        tab.setRowCount(0)
 
     def update_tab1(self):
         for i in range(0, self.resultTab_tab1.rowCount()):
             new_gain = int(self.resultTab_tab1.item(i, self.tab1["gain"]).text())
             run = int(self.resultTab_tab1.item(i, self.tab1["run"]).text())
-            new_seed = str(self.seed_adc[run]*new_gain)
+            new_seed = str(round(self.seed_adc[run]*new_gain))
             self.resultTab_tab1.setItem(i, self.tab1["seed"],
                                         QTableWidgetItem(new_seed))
         self.statusbar.showMessage("Table updated...")
@@ -206,32 +169,35 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
                     horizontalHeaderItem(column).text()][row] \
                     = float(self.limitTable.item(row, column).text())
         self.clear(self.resultTab_tab2)
-        self.start_tab2()
+        self.start_search(self.resultTab_tab2)
         return True
 
-    def exportTable(self,tab):
+    def exportTable(self, tab):
+        """Exports content of GUI table to .txt file
+        """
         x = []
         if tab == self.resultTab_tab1:
             y = tab.columnCount()-2
-            for row in range(0,tab.rowCount()):
-                for col in range(0,tab.columnCount()-1):
-                    x.append(tab.item(row,col).text())
+            for row in range(0, tab.rowCount()):
+                for col in range(0, tab.columnCount()-1):
+                    x.append(tab.item(row, col).text())
             if x == []:
                 self.statusbar.showMessage("There is nothing to export...")
             else:
-                self.write(x,y,path=self.pathBox_tab1.text(),name=self.projectBox_tab1.text())
+                self.write(x, y, path=self.pathBox_tab1.text(),
+                           name=self.projectBox_tab1.text())
 
         elif tab == self.resultTab_tab2:
             y = tab.columnCount()-3
-            for row in range(0,tab.rowCount()):
-                for col in range(0,tab.columnCount()-2):
-                    x.append(tab.item(row,col).text())
+            for row in range(0, tab.rowCount()):
+                for col in range(0, tab.columnCount()-2):
+                    x.append(tab.item(row, col).text())
             if x == []:
                 self.statusbar.showMessage("There is nothing to export...")
             else:
-                self.write(x,y,path=self.pathBox_tab2.text(),name=self.nameBox_tab2.text())
-
-        return True
+                self.write(x, y,
+                           path=self.pathBox_tab2.text(),
+                           name=self.nameBox_tab2.text())
 
     def preview(self, dic):
         """Draws data preview.
@@ -251,34 +217,36 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
 
 
     def add_tab1(self):
-        itemList = is_checked(self.resultTab_tab1,self.tab1["check"])
+        itemList = is_checked(self.resultTab_tab1, self.tab1["obj"])
         seed = []
         para = []
         try:
-            for row in range(0,self.resultTab_tab1.rowCount()):
+            for row in range(0, self.resultTab_tab1.rowCount()):
                 if row in itemList:
-                    seed.append(float(self.resultTab_tab1.item(row,self.tab1["seed"]).text()))
+                    seed.append(float(self.resultTab_tab1.item(row, self.tab1["seed"]).text()))
                     if self.paraCombo_tab1.currentText() == "Voltage":
-                        para.append(float(self.resultTab_tab1.item(row,self.tab1["annealing"]).text()))
+                        para.append(float(self.resultTab_tab1.item(row, \
+                        self.tab1["annealing"]).text()))
                     elif self.paraCombo_tab1.currentText() == "Annealing":
-                        para.append(float(self.resultTab_tab1.item(row,self.tab1["voltage"]).text()))
+                        para.append(float(self.resultTab_tab1.item(row, \
+                        self.tab1["voltage"]).text()))
 
-            if [para,seed] in self.projectList:
+            if [para, seed] in self.projectList:
                 self.statusbar.showMessage("Item has already been added to project...")
             else:
-                self.projectList.append([para,seed])
+                self.projectList.append([para, seed])
 
                 # add to project table
                 row_position = self.projectTable.rowCount()
                 self.projectTable.insertRow(row_position)
-                self.projectTable.setItem(row_position,0,
-                                          QTableWidgetItem(self.resultTab_tab1.item(0,self.tab1["name"]).text()
-                                          + " ("
-                                          + self.resultTab_tab1.item(0,self.tab1["project"]).text()
-                                          + ")"))
-        except:
+                name = self.resultTab_tab1.item(0, self.tab1["name"]).text()\
+                       + " ("\
+                       + self.resultTab_tab1.item(0, self.tab1["project"]).text()\
+                       + ")"
+                self.projectTable.setItem(row_position, 0, QTableWidgetItem(name))
+        except AttributeError:
+            self.clear(self.projectTable)
             self.statusbar.showMessage("There is nothing to add...")
-        return True
 
     def save_tab1(self):
         newPath = os.path.join(self.pathBox_tab1.text(),self.projectBox_tab1.text() + "\\")
@@ -374,6 +342,8 @@ def convert_value(val):
     elif isinstance(val, list):
         return convert_list(val)
     elif isinstance(val, (int, float)):
+        if abs(val) < 1:
+            return str(abs(round(val, 2)))
         return str(abs(round(val)))
     else:
         return val
@@ -384,9 +354,9 @@ def is_checked(tab, col):
         parent = tab.cellWidget(i, col)
         if parent.findChild(QCheckBox).checkState() == QtCore.Qt.Checked:
             item_list.append(i)
-    return itemList
+    return item_list
 
-def add_checkbox(tab_obj, row_nr):
+def add_checkbox(tab_obj, row_nr, col_nr):
     """Add a checked checkbox in the center of cell of specific row.
     """
     p_widget = QWidget()
@@ -396,7 +366,7 @@ def add_checkbox(tab_obj, row_nr):
     p_layout.setAlignment(QtCore.Qt.AlignCenter)
     p_layout.setContentsMargins(0, 0, 0, 0)
     p_checkbox.setCheckState(QtCore.Qt.Checked)
-    tab_obj.setCellWidget(row_nr, self.tab1["check"], p_widget)
+    tab_obj.setCellWidget(row_nr, col_nr, p_widget)
     return True
 
 def add_buttons(tab, button_lst, row_nr, col_nr, name, fun, *args):
@@ -404,6 +374,7 @@ def add_buttons(tab, button_lst, row_nr, col_nr, name, fun, *args):
     """
     button_lst.append(QPushButton(tab))
     button_lst[row_nr].setText(name)
+    button_lst[row_nr].setFixedWidth(67)
     tab.setCellWidget(row_nr, col_nr, button_lst[row_nr])
     button_lst[row_nr].clicked.connect(lambda: fun(*args))
 
