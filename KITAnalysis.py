@@ -30,8 +30,8 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         self.setDefValues()
 
         # tab1
-        self.projectTable.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        # self.resultTab_tab1.setColumnWidth(self.tab1["obj"], 58)
+        add_header(self.resultTab_tab1, len(self.tab1.keys())-1, self.tab1)
+        adjust_header(self.projectTable, 1, "Stretch")
 
         self.updateButton.clicked.connect(self.update_tab1)
         self.startButton.clicked.connect(lambda: self.start_search(self.resultTab_tab1))
@@ -44,9 +44,8 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         self.seed_adc = {}
 
         # tab 2
-        self.resultTab_tab2.setColumnWidth(self.tab2["voltage"], 90)
-        self.resultTab_tab2.setColumnWidth(self.tab2["pid"], 90)
-        self.resultTab_tab2.setColumnWidth(self.tab2["obj"], 78)
+        add_header(self.resultTab_tab2, len(self.tab2.keys())-1, self.tab2)
+
         self.startButton_tab2.clicked.connect(lambda: self.start_search(self.resultTab_tab2))
         self.clearButton_tab2.clicked.connect(lambda: self.clear(self.resultTab_tab2))
         self.updateButton_tab2.clicked.connect(self.update_tab2)
@@ -374,6 +373,7 @@ def add_checkbox(tab_obj, row_nr, col_nr):
     p_checkbox.setCheckState(QtCore.Qt.Checked)
     add_col(tab_obj, col_nr)
     tab_obj.setCellWidget(row_nr, col_nr, p_widget)
+    adjust_header(tab_obj, col_nr, "Stretch")
 
 def add_col(tab_obj, col_nr):
     """Adds a column to TableWidget object.
@@ -387,12 +387,35 @@ def add_button(tab_obj, button_lst, row_nr, col_nr, name, fun, *args):
     """
     button_lst.append(QPushButton(tab_obj))
     button_lst[row_nr].setText(name)
-    button_lst[row_nr].setFixedWidth(67)
     add_col(tab_obj, col_nr)
+    adjust_header(tab_obj, col_nr, "Stretch")
     tab_obj.setCellWidget(row_nr, col_nr, button_lst[row_nr])
     button_lst[row_nr].clicked.connect(lambda: fun(*args))
 
+def adjust_header(tab_obj, count, option="ResizeToContents"):
+    """Adjusts header width to column content and table width.
 
+    Args:
+        - tab_obj (TableWidget) : table object
+        - count (int) : number of columns
+        - option (str) : viable attr of QHeaderView. 'Stretch' results in equal
+                         column width. 'ResizeToContents' adjusts the column
+                         width to content.
+    """
+    header = tab_obj.horizontalHeader()
+    for col in range(0, count):
+        header.setSectionResizeMode(col, getattr(QtWidgets.QHeaderView, option))
+
+def add_header(tab_obj, count, info_dict):
+    """Adds header objects to TableWidget.
+    """
+    tab_obj.setColumnCount(count)
+    for col in range(0, count):
+        item = QtWidgets.QTableWidgetItem()
+        item.setText(list(info_dict.keys())[col])
+        tab_obj.setHorizontalHeaderItem(col, item)
+    adjust_header(tab_obj, count, "Stretch")
+    return True
 
 if __name__ == '__main__':
 
