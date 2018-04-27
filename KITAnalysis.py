@@ -1,12 +1,12 @@
 # pylint: disable=R1710, C0413, C0111, E0602, I1101, C0103, R0913
 import sys
 import os
-from PyQt5 import QtCore, QtGui, QtWidgets
+from pathlib import Path
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from data_grabber import DataGrabber
 from gui import Ui_MainWindow
-from pathlib import Path
 # assuming that "KITPlot" is one dir above top level
 sys.path.insert(0, Path(os.getcwd()).parents[0])
 from KITPlot import KITPlot
@@ -31,7 +31,7 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
 
         # tab1
         self.projectTable.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        self.resultTab_tab1.setColumnWidth(self.tab1["obj"], 58)
+        # self.resultTab_tab1.setColumnWidth(self.tab1["obj"], 58)
 
         self.updateButton.clicked.connect(self.update_tab1)
         self.startButton.clicked.connect(lambda: self.start_search(self.resultTab_tab1))
@@ -119,7 +119,7 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
             ass_dict = self.tab2
             name = self.nameBox_tab2.text()
             project = self.projectCombo_tab2.currentText()
-            add_buttons(self.resultTab_tab2, self.buttons,
+            add_button(self.resultTab_tab2, self.buttons,
                         row_position, self.tab2["obj"],
                         "Preview", self.preview, data_dict)
 
@@ -209,7 +209,8 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
             x = [x for x in range(0, len(dic["data"]))]
             y = dic["data"]
         kPlot = KITPlot([(x, y)],
-                        defaultCfg=self.defaultCfgDic[dic["para"].replace("_Ramp", "")],
+                        defaultCfg=os.path.join("Resources", self.defaultCfgDic\
+                                   [dic["para"].replace("_Ramp", "")]),
                         name=dic["para"].replace("_Ramp", ""))
         kPlot.draw("matplotlib")
         # kPlot.saveCanvas()
@@ -249,11 +250,13 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
             self.statusbar.showMessage("There is nothing to add...")
 
     def save_tab1(self):
-        newPath = os.path.join(self.pathBox_tab1.text(),self.projectBox_tab1.text() + "\\")
-        if os.path.exists(newPath) == False:
-            os.mkdir(newPath)
-        for i,graph in enumerate(self.projectList):
-            self.write(graph[0],graph[1],path=newPath,name=self.projectTable.item(i,0).text())
+        new_path = os.path.join(self.pathBox_tab1.text(),
+                               self.projectBox_tab1.text())
+        if os.path.exists(new_path) == False:
+            os.mkdir(new_path)
+        for i, graph in enumerate(self.projectList):
+            self.write(graph[0], graph[1], path=new_path,
+                       name=self.projectTable.item(i, 0).text())
         self.statusbar.showMessage("Project saved...")
         return True
 
@@ -294,35 +297,38 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         return True
 
     def write(self, x, y, z=None, path=None, name=None):
-        if path == None or path == "":
+        if path is None or path == "":
             path = os.getcwd()
-        if name == None or name == "":
+        if name is None or name == "":
             name = "NewProject"
 
         if not os.path.exists(path):
             raise ValueError("Given path does not exist.")
         with open(path + name + ".txt", 'w') as File:
             # export full table
-            if isinstance(y, int) and z == None:
+            if isinstance(y, int) and z is None:
                 for i, el in enumerate(x):
                     if (i+1)%(y+1) == 0 and i>0:
                         File.write("{:<15}".format(el) + "\n")
                     else:
                         File.write("{:<15}".format(el))
             # export 2 parameters
-            elif z == None and all(isinstance(i, list) for i in [x,y]):
-                for i,j in list(zip(x,y)):
-                    File.write("{:<15} {:<15}".format(i,j) + "\n")
+            elif z is None and all(isinstance(i, list) for i in [x, y]):
+                for i, j in list(zip(x, y)):
+                    File.write("{:<15} {:<15}".format(i, j) + "\n")
             # export 3 parameters
-            elif all(isinstance(i, list) for i in [x,y,z]):
-                for i,j,k in list(zip(x,y,z)):
-                    File.write("{:<15} {:<15} {:<15}".format(i,j,k) + "\n")
+            elif all(isinstance(i, list) for i in [x, y, z]):
+                for i, j, k in list(zip(x, y, z)):
+                    File.write("{:<15} {:<15} {:<15}".format(i, j, k) + "\n")
             else:
                 self.statusbar.showMessage("An error occured while saving...")
 
             File.close()
-            print ("Data written into %s" %(path+name+".txt"))
+            print("Data written into %s" %(path+name+".txt"))
         return True
+###########
+#Functions#
+###########
 
 def convert_dict(dic):
     """Convert all key and values of a data dict and its nested items into
@@ -366,16 +372,24 @@ def add_checkbox(tab_obj, row_nr, col_nr):
     p_layout.setAlignment(QtCore.Qt.AlignCenter)
     p_layout.setContentsMargins(0, 0, 0, 0)
     p_checkbox.setCheckState(QtCore.Qt.Checked)
+    add_col(tab_obj, col_nr)
     tab_obj.setCellWidget(row_nr, col_nr, p_widget)
-    return True
 
-def add_buttons(tab, button_lst, row_nr, col_nr, name, fun, *args):
+def add_col(tab_obj, col_nr):
+    """Adds a column to TableWidget object.
+    """
+    tab_obj.setColumnCount(col_nr+1)
+    item = QtWidgets.QTableWidgetItem()
+    tab_obj.setHorizontalHeaderItem(col_nr, item)
+
+def add_button(tab_obj, button_lst, row_nr, col_nr, name, fun, *args):
     """Add a button at specific position to table.
     """
-    button_lst.append(QPushButton(tab))
+    button_lst.append(QPushButton(tab_obj))
     button_lst[row_nr].setText(name)
     button_lst[row_nr].setFixedWidth(67)
-    tab.setCellWidget(row_nr, col_nr, button_lst[row_nr])
+    add_col(tab_obj, col_nr)
+    tab_obj.setCellWidget(row_nr, col_nr, button_lst[row_nr])
     button_lst[row_nr].clicked.connect(lambda: fun(*args))
 
 
