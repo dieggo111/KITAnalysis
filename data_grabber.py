@@ -90,7 +90,7 @@ def get_mean(data, limit_dic):
                 corr_lst.append(val)
         dic["disc_ratio"] = (len(dic["data"])-len(corr_lst))/len(dic["data"])
         dic["mean"] = "{:0.3e}".format(np.mean(corr_lst))
-        dic["std_err"] = "{:0.3e}".format(np.std(corr_lst))
+        dic["std_err"] = "{:0.3e}".format(np.std(corr_lst)/np.sqrt(len(corr_lst)))
     return data
 
 
