@@ -208,8 +208,10 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         except KeyError:
             x = [x for x in range(0, len(dic["data"]))]
             y = dic["data"]
+
         kPlot = KITPlot([(x, y)],
-                        defaultCfg=self.defaultCfgDic[dic["para"].replace("_Ramp", "")],
+                        defaultCfg=os.path.join("Resources", self.defaultCfgDic\
+                                                [dic["para"].replace("_Ramp", "")]),
                         name=dic["para"].replace("_Ramp", ""))
         kPlot.draw("matplotlib")
         # kPlot.saveCanvas()
