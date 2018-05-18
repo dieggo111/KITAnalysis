@@ -1,5 +1,6 @@
 # sys.path.insert(0, Path(os.getcwd()).parents[0])
-import sys,os
+import sys
+import os
 from KITPlot.KITConfig import KITConfig
 # from pathlib import Path
 
