@@ -1,11 +1,10 @@
 # sys.path.insert(0, Path(os.getcwd()).parents[0])
-import sys
 import os
 from KITPlot.KITConfig import KITConfig
 # from pathlib import Path
 
 class InitGlobals(object):
-    def initGlobals(self, cwd=os.getcwd()):
+    def __init__(self, cwd=os.getcwd()):
         # create cfg/output folder
         if not os.path.exists(os.path.join(cwd, "cfg")):
             os.mkdir("cfg")
@@ -19,27 +18,27 @@ class InitGlobals(object):
             new = KITConfig()
             new.Dir("Resources")
             new.setDict({
-                            "Globals": {
-                                "CredPath"  : ""},
-                            "DefaultParameters": {
-                                "OutputPath": "",
-                                "Limits": {
-                                    "R_int"    : [1e8, 1e13],
-                                    "R_poly_dc": [1e5, 3e6],
-                                    "I_leak_dc": [0.01e-9, 1e-9],
-                                    "Pinhole"  : [0, 8e12],
-                                    "CC"       : [20e-12, 70e-12],
-                                    "C_int"    : [0.3e-12, 1.3e-12]}
-                            },
-                            "DefaultCfgs": {
-                                "SignalVoltage"   : os.path.join("Resources", "ALiBaVa_vs_default.cfg"),
-                                "SignalAnnealing" : os.path.join("Resources", "ALiBaVa_as_default.cfg"),
-                                "R_int"           : os.path.join("Resources", "Rint_default.cfg"),
-                                "C_int"           : os.path.join("Resources", "Cint_default.cfg"),
-                                "R_poly_dc"       : os.path.join("Resources", "Rpoly_default.cfg"),
-                                "Pinhole"         : os.path.join("Resources", "Pinhole_default.cfg"),
-                                "CC"              : os.path.join("Resources", "CC_default.cfg"),
-                                "I_leak_dc"       : os.path.join("Resources", "Ileak_default.cfg")}})
+                "Globals": {
+                    "CredPath"  : ""},
+                "DefaultParameters": {
+                    "OutputPath": "",
+                    "Limits": {
+                        "R_int"    : [1e8, 1e13],
+                        "R_poly_dc": [1e5, 3e6],
+                        "I_leak_dc": [0.01e-9, 1e-9],
+                        "Pinhole"  : [0, 8e12],
+                        "CC"       : [20e-12, 70e-12],
+                        "C_int"    : [0.3e-12, 1.3e-12]}
+                },
+                "DefaultCfgs": {
+                    "SignalVoltage"   : os.path.join("Resources", "ALiBaVa_vs_default.cfg"),
+                    "SignalAnnealing" : os.path.join("Resources", "ALiBaVa_as_default.cfg"),
+                    "R_int"           : os.path.join("Resources", "Rint_default.cfg"),
+                    "C_int"           : os.path.join("Resources", "Cint_default.cfg"),
+                    "R_poly_dc"       : os.path.join("Resources", "Rpoly_default.cfg"),
+                    "Pinhole"         : os.path.join("Resources", "Pinhole_default.cfg"),
+                    "CC"              : os.path.join("Resources", "CC_default.cfg"),
+                    "I_leak_dc"       : os.path.join("Resources", "Ileak_default.cfg")}})
             new.write("Settings.cfg")
 
         # load gloabals and default values
@@ -54,6 +53,11 @@ class InitGlobals(object):
             self.db_config = cnxConf["database"]
         except:
             raise ValueError("No credentials file found.")
+
+        # accepted projects
+        self.projects = ["HPK_2S_I", "HPK_2S_II", "CEC BabyStd", "CEC Bstd",
+                         "CEC BPA", "CEC Badd", "CalibrationDiodes"]
+
 
         # set column index dicts
         self.tab1 = {"name"         : 0,
@@ -75,3 +79,11 @@ class InitGlobals(object):
                      "std_err"      : 7,
                      "disc_ratio"   : 8,
                      "obj"          : 9}
+
+        self.tab3 = {"name"         : 0,
+                     "project"      : 1,
+                     "pid"          : 2,
+                     "fluence"      : 3,
+                     "annealing"    : 4,
+                     "I_norm@V"     : 5,
+                     "obj"          : 6}

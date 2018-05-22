@@ -25,14 +25,12 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         """
         Ui_MainWindow.__init__(self)
         self.setupUi(dialog)
-
-        self.initGlobals()
-        self.setDefValues()
+        InitGlobals.__init__(self)
 
         # tab1
         add_header(self.resultTab_tab1, len(self.tab1.keys())-1, self.tab1)
         adjust_header(self.projectTable, 1, "Stretch")
-
+        set_projects(self.project_combo_3, self.projects)
         self.updateButton.clicked.connect(self.update_tab1)
         self.startButton.clicked.connect(lambda: self.start_search(self.resultTab_tab1))
         self.exportButton.clicked.connect(lambda: self.exportTable(self.resultTab_tab1))
@@ -45,13 +43,23 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
 
         # tab 2
         add_header(self.resultTab_tab2, len(self.tab2.keys())-1, self.tab2)
-
+        set_projects(self.project_combo_2, self.projects)
         self.startButton_tab2.clicked.connect(lambda: self.start_search(self.resultTab_tab2))
         self.clearButton_tab2.clicked.connect(lambda: self.clear(self.resultTab_tab2))
         self.updateButton_tab2.clicked.connect(self.update_tab2)
         self.exportButton_tab2.clicked.connect(lambda: self.exportTable(self.resultTab_tab2))
         self.searchResult_tab2 = []
         self.buttons = []
+
+        # tab 3
+        add_header(self.resultTab_tab3, len(self.tab3.keys())-1, self.tab3)
+        adjust_header(self.project_table_3, 1, "Stretch")
+        set_projects(self.project_combo_3, self.projects)
+        self.start_button_3.clicked.connect(lambda: self.start_search(self.resultTab_tab3))
+        self.projectList = []
+
+        self.setDefValues()
+
 
     def setDefValues(self):
         """ Set limit table values and default values of some boxes which is
@@ -75,6 +83,16 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
             self.limitTable.setItem(1, column, QTableWidgetItem("{:0.1e}".format(\
                 self.limit_dic[self.limitTable.horizontalHeaderItem(column).text()][1])))
 
+        self.voltage_box.setText("300")
+        self.nameBox_tab3.setText("FBK_W%")
+        self.path_box_3.setText(self.outputPath)
+        self.project_box_3.setText("NewProject")
+        self.volume_box.setText("1")
+        self.project_combo_3.setCurrentIndex(self.project_combo_3.findText(\
+            "CalibrationDiodes", QtCore.Qt.MatchFixedString))
+        self.tabWidget.setCurrentIndex(2)
+
+
     def start_search(self, tab):
         """Starts to search data from DB. Executed when the start button is hit.
         Data are then sorted by DataGrabber class and visualized by writing them
@@ -93,6 +111,9 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
                                                 self.projectCombo_tab2.currentText(),
                                                 self.paraCombo_tab2.currentText(),
                                                 self.limit_dic)
+            if tab == self.resultTab_tab3:
+                data_lst =
+
             if data_lst == {}:
                 raise ValueError
             for dic in data_lst:
@@ -417,6 +438,12 @@ def add_header(tab_obj, count, info_dict):
         tab_obj.setHorizontalHeaderItem(col, item)
     adjust_header(tab_obj, count, "Stretch")
     return True
+
+def set_projects(combo_obj, project_list):
+    for i, pro in enumerate(project_list):
+        combo_obj.addItem("")
+        combo_obj.setItemText(i, pro)
+
 
 if __name__ == '__main__':
 
