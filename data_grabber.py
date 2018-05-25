@@ -7,6 +7,10 @@ import numpy as np
 sys.path.insert(0, str(Path(os.getcwd()).parents[0]))
 from KITPlot.KITSearch import KITSearch
 
+STRIP_PARAS = ["R_int", "R_int_Ramp", "R_poly_dc", "I_leak_dc",
+               "C_int", "CC", "Pinhole", "C_int_Ramp"]
+STD_PARAS = ["C_tot", "I_tot"]
+
 class DataGrabber(object):
     """Grab data dict and convert/format it according to specifications of app.
     """
@@ -17,23 +21,29 @@ class DataGrabber(object):
         self.__default_gain = 210
         self.__annealing_norm = 1
         self.db_creds = credentials
-        self.strip_meas = ["R_int", "R_int_Ramp", "R_poly_dc", "I_leak_dc",
-                           "C_int", "CC", "Pinhole", "C_int_Ramp"]
-        self.std_meas = ("C_tot", "I_tot")
+
+
+    def alpha_search(self, name, project, t_vol, volume):
+        """Format data dict according to table specifications."""
+        session = KITSearch(self.db_creds)
+        dic = session.probe_search(name, project)
+        dic = pop_items(dic, "I_tot", STD_PARAS, STRIP_PARAS)
+        data_lst = reshuffle_for_alpha(dic, float(t_vol), float(volume))
+        return data_lst
 
     def strip_search(self, name, project, para, limit_dic):
         """Format data dict according to table specifications.
 
-        Returns: [{measurment data for v_bais1}, {measurment data for v_bais2},
+        Returns: [{measurment data for item1}, {measurment data for item2},
                  ...]
         """
         session = KITSearch(self.db_creds)
-        dic = session.probe_search_for_name(name, project)
+        dic = session.probe_search(name, project)
         if para == "*":
-            dic = pop_items(dic, "IVCV", self.std_meas, self.strip_meas)
+            dic = pop_items(dic, "IVCV", STD_PARAS, STRIP_PARAS)
             data_lst = handle_asterisk(dic)
         else:
-            dic = pop_items(dic, para, self.std_meas, self.strip_meas)
+            dic = pop_items(dic, para, STD_PARAS, STRIP_PARAS)
             if "Ramp" in para:
                 data_lst = reshuffle_for_ramp(dic, para)
             else:
@@ -45,11 +55,8 @@ class DataGrabber(object):
         """Format data dict according to table specifications.
         """
         session = KITSearch(self.db_creds)
-        if para == "Voltage":
-            dic = session.ali_search_for_name_voltage(name, int(value), project)
-        elif para == "Annealing":
-            dic = session.ali_search_for_name_annealing(name, int(value), project)
-        dic = pop_items(dic, "unanalyzed", self.std_meas, self.strip_meas)
+        dic = session.ali_search_data(name, project, para, int(value))
+        dic = pop_items(dic, "unanalyzed", STD_PARAS, STRIP_PARAS)
         data_lst = reshuffle_for_alibava(dic)
         return data_lst
 
@@ -103,11 +110,42 @@ def pop_items(dic, opt, std_meas, strip_meas):
             del_lst.append(sec)
         elif opt == "IVCV" and dic[sec]["paraY"] in std_meas:
             del_lst.append(sec)
-        elif opt in strip_meas and dic[sec]["paraY"] != opt:
+        elif opt in strip_meas+std_meas and dic[sec]["paraY"] != opt:
+            del_lst.append(sec)
+        elif opt == "alpha" and dic[sec]["fluence"] == 0:
             del_lst.append(sec)
     for run in del_lst:
         dic.pop(run)
     return dic
+
+def reshuffle_for_alpha(data, tar_volt, volume):
+    """Reshuffels data dict for alpha plots. Get leakage current at target
+    voltage before irradiation if possible. Then get leakage current at target
+    voltage after irradiation and normalize data.
+
+    Returns: [{measurment data for v_bais1}, {measurment data for v_bais2}, ...]
+    """
+    data_lst = []
+
+    curr_0_dict = find_curr_in_dict(data, tar_volt, False)
+    curr_dict = find_curr_in_dict(data, tar_volt, True)
+    for sec in data:
+        if data[sec]["fluence"] != 0:
+            data_lst.append({"name" : data[sec]["name"],
+                             "voltage" : tar_volt,
+                             "I_norm@V" : norm_curr(\
+                                    curr_dict[data[sec]["name"]],
+                                    volume,
+                                    tar_volt,
+                                    curr_0_dict[data[sec]["name"]]),
+                             "I@V" : curr_dict[data[sec]["name"]],
+                             "pid" : data[sec]["PID"],
+                             "para" : data[sec]["paraY"],
+                             "annealing" : format_ann(data[sec]["annealing"]),
+                             "fluence" : format_flu_par(\
+                                    data[sec]["fluence"],
+                                    data[sec]["particletype"])})
+    return data_lst
 
 def reshuffle_for_alibava(data):
     """Reshuffels data dict for ramp measurements in order to meet
@@ -122,7 +160,7 @@ def reshuffle_for_alibava(data):
                          "annealing" : data[sec]["annealing"],
                          "gain" : data[sec]["gain"],
                          "seed" : data[sec]["seed"],
-                         "fluence" : make_flu_par(data[sec]["fluence"], \
+                         "fluence" : format_flu_par(data[sec]["fluence"], \
                          data[sec]["particletype"])})
     return data_lst
 
@@ -130,7 +168,7 @@ def reshuffle_for_strip(data):
     """Reshuffels data dict for ramp measurements in order to meet
     specifications of app regarding strip measurements.
 
-    Returns: [{measurment data for v_bais1}, {measurment data for v_bais2}, ...]
+    Returns: [{measurment data for item1}, {measurment data for item2}, ...]
     """
     data_lst = []
     for sec in data:
@@ -138,10 +176,11 @@ def reshuffle_for_strip(data):
                          "pid" : data[sec]["PID"],
                          "para" : data[sec]["paraY"],
                          "data" : data[sec]["dataY"],
-                         "fluence" : make_flu_par(data[sec]["fluence"], \
+                         "fluence" : format_flu_par(data[sec]["fluence"], \
                          data[sec]["particletype"]),
                          "strip" : data[sec]["dataX"]})
     return data_lst
+
 
 def reshuffle_for_ramp(data, para=None):
     """Reshuffels data dict for ramp measurements in order to meet
@@ -153,7 +192,7 @@ def reshuffle_for_ramp(data, para=None):
     ass_dict = {}
     voltage_values = []
     for pid, dic in data.items():
-        flu_par = make_flu_par(dic["fluence"], dic["particletype"])
+        flu_par = format_flu_par(dic["fluence"], dic["particletype"])
         if flu_par not in ass_dict.keys():
             ass_dict[flu_par] = []
     for key in ass_dict:
@@ -194,8 +233,90 @@ def get_ramp_data(ass_lst, volt_lst, data_dict):
                             data_dict[pid]["dataZ"].index(volt)]]
     return v_r_dict
 
-def make_flu_par(flu, par):
+def find_curr_in_dict(data, tar_volt, irr):
+    """Find current value at target voltage before irradiation of specific
+    sensor"""
+    dic = {}
+    for sec in data:
+        if irr is False:
+            if data[sec]["fluence"] == 0 and data[sec]["flag"] == "valid":
+                dic[data[sec]["name"]] = find_curr(data[sec]["dataX"],
+                                                   data[sec]["dataY"],
+                                                   data[sec]["temp"],
+                                                   irr,
+                                                   tar_volt)
+            elif data[sec]["fluence"] == 0 and data[sec]["flag"] == "good" \
+                    and data[sec]["name"] not in dic.keys():
+                dic[data[sec]["name"]] = find_curr(data[sec]["dataX"],
+                                                   data[sec]["dataY"],
+                                                   data[sec]["temp"],
+                                                   irr,
+                                                   tar_volt)
+        else:
+            if not data[sec]["fluence"] == 0 and data[sec]["flag"] == "valid":
+                dic[data[sec]["name"]] = find_curr(data[sec]["dataX"],
+                                                   data[sec]["dataY"],
+                                                   data[sec]["temp"],
+                                                   irr,
+                                                   tar_volt)
+            elif not data[sec]["fluence"] == 0 and data[sec]["flag"] == "good" \
+                    and data[sec]["name"] not in dic.keys():
+                dic[data[sec]["name"]] = find_curr(data[sec]["dataX"],
+                                                   data[sec]["dataY"],
+                                                   data[sec]["temp"],
+                                                   irr,
+                                                   tar_volt)
+    return dic
+
+def find_curr(datax, datay, datat, irr, tar_volt):
+    """Zips voltage, current and temperature lists in order to find the current
+    at a certain voltage. Also checks if temperature is in the expected range.
+
+    Args:
+        - datax (list) : voltage list
+        - datay (list) : current list
+        - datat (list) : temperature list
+        - irr (bool) : default temperature is -20 for irradiated and 20 for
+                       unirradiated samples
+        - tar_volt (float) : target voltage
+    """
+    if irr is True:
+        temp = -20
+    if irr is False:
+        temp = 20
+    for x_val, y_val, temp_val in zip(datax, datay, datat):
+        if (abs(tar_volt)*0.99) < abs(x_val) < (abs(tar_volt)*1.01):
+            if irr is True and (temp*1.05) < temp_val < (temp*0.95):
+                return y_val
+            if irr is False and (temp*0.95) < temp_val < (temp*1.05):
+                return y_val
+    return 0
+
+def format_flu_par(flu, par):
     """Create a string containing fluence and particletype.
     """
+    if set(par) == set(["n", "p"]):
+        par = "np"
+    elif len(par) == 1:
+        par = par[0]
+    else:
+        par = ""
     flu_par = "{:.2e}".format(flu) + par
     return flu_par
+
+def format_ann(ann, scale="days"):
+    """Create a string containing annealing time in hours or weeks with
+    attached unit symbol.
+    """
+    if scale == "days":
+        return str(round(ann/24)) + "d (" + str(round(ann)) + "h)"
+    if scale == "weeks":
+        return str(round(ann/24/7, 1)) + "w (" + str(round(ann)) + "h)"
+
+def norm_curr(curr, volume, temp, curr_0):
+    """Normalize current to volume and 20°C."""
+    delta = curr/volume - curr_0/volume
+    if temp < 19:
+        delta = delta*(293/(273-temp))**2*np.exp(-1.21/(2*1.38*10**-23)\
+                *1.6*(10**-19)*(1/293-1/(273-temp)))
+    return delta

@@ -1,4 +1,4 @@
-# pylint: disable=R1710, C0413, C0111, E0602, I1101, C0103, R0913
+# pylint: disable=R1710, C0413, C0111, E0602, I1101, C0103, R0913, W0401
 import sys
 import os
 from pathlib import Path
@@ -6,11 +6,12 @@ from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from data_grabber import DataGrabber
+from Resources.InitGlobals import InitGlobals
 from gui import Ui_MainWindow
 # assuming that "KITPlot" is one dir above top level
 sys.path.insert(0, Path(os.getcwd()).parents[0])
 from KITPlot import KITPlot
-from Resources.InitGlobals import InitGlobals
+
 
 class KITAnalysis(Ui_MainWindow, InitGlobals):
     """Search application for ETP DB.
@@ -30,10 +31,10 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         # tab1
         add_header(self.resultTab_tab1, len(self.tab1.keys())-1, self.tab1)
         adjust_header(self.projectTable, 1, "Stretch")
-        set_projects(self.project_combo_3, self.projects)
+        set_combo_box(self.project_combo_3, self.projects)
         self.updateButton.clicked.connect(self.update_tab1)
         self.startButton.clicked.connect(lambda: self.start_search(self.resultTab_tab1))
-        self.exportButton.clicked.connect(lambda: self.exportTable(self.resultTab_tab1))
+        self.export_button_1.clicked.connect(lambda: self.export_table(self.resultTab_tab1))
         self.addButton.clicked.connect(self.add_tab1)
         self.clearButton.clicked.connect(lambda: self.clear(self.projectTable))
         self.saveButton.clicked.connect(self.save_tab1)
@@ -43,35 +44,35 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
 
         # tab 2
         add_header(self.resultTab_tab2, len(self.tab2.keys())-1, self.tab2)
-        set_projects(self.project_combo_2, self.projects)
+        set_combo_box(self.project_combo_2, self.projects)
         self.startButton_tab2.clicked.connect(lambda: self.start_search(self.resultTab_tab2))
         self.clearButton_tab2.clicked.connect(lambda: self.clear(self.resultTab_tab2))
         self.updateButton_tab2.clicked.connect(self.update_tab2)
-        self.exportButton_tab2.clicked.connect(lambda: self.exportTable(self.resultTab_tab2))
+        self.export_button_2.clicked.connect(lambda: self.export_table(self.resultTab_tab2))
         self.searchResult_tab2 = []
         self.buttons = []
 
         # tab 3
-        add_header(self.resultTab_tab3, len(self.tab3.keys())-1, self.tab3)
+        add_header(self.result_tab_3, len(self.tab3.keys())-1, self.tab3)
         adjust_header(self.project_table_3, 1, "Stretch")
-        set_projects(self.project_combo_3, self.projects)
-        self.start_button_3.clicked.connect(lambda: self.start_search(self.resultTab_tab3))
-        self.projectList = []
+        set_combo_box(self.project_combo_3, self.projects)
+        self.start_button_3.clicked.connect(lambda: self.start_search(self.result_tab_3))
+        self.project_lst_3 = []
 
-        self.setDefValues()
+        self.set_def_values()
 
 
-    def setDefValues(self):
+    def set_def_values(self):
         """ Set limit table values and default values of some boxes which is
         mainly used for debbuging.
         """
         self.valueBox_tab1.setText("600")
-        self.nameBox_tab1.setText("KIT_Test_07")
+        self.name_box_1.setText("KIT_Test_07")
         self.pathBox_tab1.setText(self.outputPath)
         self.projectBox_tab1.setText("NewProject")
-        # self.nameBox_tab2.setText("No_Pstop_06")
-        self.nameBox_tab2.setText("No_Pstop_06")
-        self.projectCombo_tab2.setCurrentIndex(self.projectCombo_tab2.findText(\
+        # self.name_box_2.setText("No_Pstop_06")
+        self.name_box_2.setText("No_Pstop_06")
+        self.project_combo_2.setCurrentIndex(self.project_combo_2.findText(\
             "HPK_2S_II", QtCore.Qt.MatchFixedString))
         self.paraCombo_tab2.setCurrentIndex(self.paraCombo_tab2.findText(\
             "R_int_Ramp", QtCore.Qt.MatchFixedString))
@@ -84,10 +85,11 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
                 self.limit_dic[self.limitTable.horizontalHeaderItem(column).text()][1])))
 
         self.voltage_box.setText("300")
-        self.nameBox_tab3.setText("FBK_W%")
+        # self.name_box_3.setText("FBK_W%")
+        self.name_box_3.setText("FBK_W5_07")
         self.path_box_3.setText(self.outputPath)
         self.project_box_3.setText("NewProject")
-        self.volume_box.setText("1")
+        self.volume_box.setText("0.005")
         self.project_combo_3.setCurrentIndex(self.project_combo_3.findText(\
             "CalibrationDiodes", QtCore.Qt.MatchFixedString))
         self.tabWidget.setCurrentIndex(2)
@@ -99,20 +101,24 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         into GUI table.
         """
         self.clear(tab)
+        self.statusbar.showMessage("Beginn search...")
         try:
             grabber = DataGrabber(self.db_config)
             if tab == self.resultTab_tab1:
-                data_lst = grabber.alibava_search(self.nameBox_tab1.text(),
-                                                  self.projectCombo_tab1.currentText(),
+                data_lst = grabber.alibava_search(self.name_box_1.text(),
+                                                  self.project_combo_1.currentText(),
                                                   self.paraCombo_tab1.currentText(),
                                                   self.valueBox_tab1.text())
             if tab == self.resultTab_tab2:
-                data_lst = grabber.strip_search(self.nameBox_tab2.text(),
-                                                self.projectCombo_tab2.currentText(),
+                data_lst = grabber.strip_search(self.name_box_2.text(),
+                                                self.project_combo_2.currentText(),
                                                 self.paraCombo_tab2.currentText(),
                                                 self.limit_dic)
-            if tab == self.resultTab_tab3:
-                data_lst =
+            if tab == self.result_tab_3:
+                data_lst = grabber.alpha_search(self.name_box_3.text(),
+                                                self.project_combo_3.currentText(),
+                                                self.voltage_box.text(),
+                                                self.volume_box.text())
 
             if data_lst == {}:
                 raise ValueError
@@ -123,31 +129,35 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
             self.statusbar.showMessage("Couldn't find data that met the requirements...")
 
     def write_to_table(self, data_dict, tab):
-        """ Fill table with data.
-        """
+        """ Fill table with data."""
         dic = convert_dict(data_dict)
         row_position = tab.rowCount()
         tab.insertRow(row_position)
 
         if tab == self.resultTab_tab1:
             ass_dict = self.tab1
-            name = self.nameBox_tab1.text()
-            project = self.projectCombo_tab1.currentText()
+            name = self.name_box_1.text()
+            project = self.project_combo_1.currentText()
             add_checkbox(tab, row_position, self.tab1["obj"])
             self.resultTab_tab1.setColumnWidth(self.tab1["obj"], 47)
         if tab == self.resultTab_tab2:
             ass_dict = self.tab2
-            name = self.nameBox_tab2.text()
-            project = self.projectCombo_tab2.currentText()
+            name = self.name_box_2.text()
+            project = self.project_combo_2.currentText()
             add_button(self.resultTab_tab2, self.buttons,
-                        row_position, self.tab2["obj"],
-                        "Preview", self.preview, data_dict)
+                       row_position, self.tab2["obj"],
+                       "Preview", self.preview, data_dict)
+        if tab == self.result_tab_3:
+            ass_dict = self.tab3
+            name = self.name_box_3.text()
+            project = self.project_combo_3.currentText()
+            add_checkbox(tab, row_position, self.tab3["obj"])
 
         for col in ass_dict:
-            if col == "name":
+            if col == "name" and tab != self.result_tab_3:
                 tab.setItem(row_position, ass_dict[col],
                             QTableWidgetItem(name))
-            elif col == "project":
+            if col == "project":
                 tab.setItem(row_position, ass_dict[col],
                             QTableWidgetItem(project))
             elif col == "seed":
@@ -192,9 +202,8 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         self.start_search(self.resultTab_tab2)
         return True
 
-    def exportTable(self, tab):
-        """Exports content of GUI table to .txt file
-        """
+    def export_table(self, tab):
+        """Exports content of GUI table to .txt file."""
         x = []
         if tab == self.resultTab_tab1:
             y = tab.columnCount()-2
@@ -217,11 +226,10 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
             else:
                 self.write(x, y,
                            path=self.pathBox_tab2.text(),
-                           name=self.nameBox_tab2.text())
+                           name=self.name_box_2.text())
 
     def preview(self, dic):
-        """Draws data preview.
-        """
+        """Draws data preview."""
         try:
             x = dic["strip"]
             y = dic["data"]
@@ -272,8 +280,8 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
 
     def save_tab1(self):
         new_path = os.path.join(self.pathBox_tab1.text(),
-                               self.projectBox_tab1.text())
-        if os.path.exists(new_path) == False:
+                                self.projectBox_tab1.text())
+        if os.path.exists(new_path) is False:
             os.mkdir(new_path)
         for i, graph in enumerate(self.projectList):
             self.write(graph[0], graph[1], path=new_path,
@@ -329,7 +337,7 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
             # export full table
             if isinstance(y, int) and z is None:
                 for i, el in enumerate(x):
-                    if (i+1)%(y+1) == 0 and i>0:
+                    if (i + 1)%(y + 1) == 0 and i > 0:
                         File.write("{:<15}".format(el) + "\n")
                     else:
                         File.write("{:<15}".format(el))
@@ -369,7 +377,9 @@ def convert_value(val):
     elif isinstance(val, list):
         return convert_list(val)
     elif isinstance(val, (int, float)):
-        if abs(val) < 1:
+        if abs(val) < 0.001:
+            return "{:0.3e}".format(abs(val))
+        if 0.001 < abs(val) <= 1:
             return str(abs(round(val, 2)))
         return str(abs(round(val)))
     else:
@@ -429,8 +439,7 @@ def adjust_header(tab_obj, count, option="ResizeToContents"):
         header.setSectionResizeMode(col, getattr(QtWidgets.QHeaderView, option))
 
 def add_header(tab_obj, count, info_dict):
-    """Adds header objects to TableWidget.
-    """
+    """Adds header objects to TableWidget."""
     tab_obj.setColumnCount(count)
     for col in range(0, count):
         item = QtWidgets.QTableWidgetItem()
@@ -439,7 +448,8 @@ def add_header(tab_obj, count, info_dict):
     adjust_header(tab_obj, count, "Stretch")
     return True
 
-def set_projects(combo_obj, project_list):
+def set_combo_box(combo_obj, project_list):
+    """Adds items to QComboBox widget"""
     for i, pro in enumerate(project_list):
         combo_obj.addItem("")
         combo_obj.setItemText(i, pro)

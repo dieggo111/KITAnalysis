@@ -85,5 +85,6 @@ class InitGlobals(object):
                      "pid"          : 2,
                      "fluence"      : 3,
                      "annealing"    : 4,
-                     "I_norm@V"     : 5,
-                     "obj"          : 6}
+                     "I@V"          : 5,
+                     "I_norm@V"     : 6,
+                     "obj"          : 7}

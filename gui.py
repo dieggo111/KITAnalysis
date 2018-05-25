@@ -1,10 +1,13 @@
+"""GUI of KITAnalysis app"""
 # -*- coding: utf-8 -*-
 # pylint: disable=R0915,W0201,W0611,R0902,I1101
 from PyQt5 import QtCore, QtGui, QtWidgets
 from Resources import Logo_rc
 
 class Ui_MainWindow(object):
+    """Initialization of GUI objects and assignment of their values."""
     def setupUi(self, MainWindow):
+        """Initialization of GUI objects, positioning and naming."""
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1000, 614)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -19,10 +22,10 @@ class Ui_MainWindow(object):
         self.updateButton = QtWidgets.QPushButton(self.tab_1)
         self.updateButton.setGeometry(QtCore.QRect(160, 500, 111, 31))
         self.updateButton.setObjectName("updateButton")
-        self.nameBox_tab1 = QtWidgets.QLineEdit(self.tab_1)
-        self.nameBox_tab1.setGeometry(QtCore.QRect(10, 70, 121, 20))
-        self.nameBox_tab1.setText("")
-        self.nameBox_tab1.setObjectName("nameBox_tab1")
+        self.name_box_1 = QtWidgets.QLineEdit(self.tab_1)
+        self.name_box_1.setGeometry(QtCore.QRect(10, 70, 121, 20))
+        self.name_box_1.setText("")
+        self.name_box_1.setObjectName("nameBox_tab1")
         self.pathBox_tab1 = QtWidgets.QLineEdit(self.tab_1)
         self.pathBox_tab1.setGeometry(QtCore.QRect(10, 130, 271, 20))
         self.pathBox_tab1.setText("")
@@ -52,7 +55,7 @@ class Ui_MainWindow(object):
         self.headLabel_tab1 = QtWidgets.QLabel(self.tab_1)
         self.headLabel_tab1.setGeometry(QtCore.QRect(10, 0, 181, 21))
         self.headLabel_tab1.setStyleSheet("text-decoration: underline;\n"
-"font: 75 10pt \"Verdana\";")
+                                          "font: 75 10pt \"Verdana\";")
         self.headLabel_tab1.setObjectName("headLabel_tab1")
 
         self.valueBox_tab1 = QtWidgets.QLineEdit(self.tab_1)
@@ -88,24 +91,31 @@ class Ui_MainWindow(object):
         self.drawButton = QtWidgets.QPushButton(self.tab_1)
         self.drawButton.setGeometry(QtCore.QRect(810, 450, 161, 31))
         self.drawButton.setObjectName("drawButton")
-        self.exportButton = QtWidgets.QPushButton(self.tab_1)
-        self.exportButton.setGeometry(QtCore.QRect(10, 500, 111, 31))
-        self.exportButton.setObjectName("exportButton")
+
+        self.export_button_1 = QtWidgets.QPushButton(self.tab_1)
+        self.export_button_1.setGeometry(QtCore.QRect(10, 500, 111, 31))
+        self.export_button_1.setObjectName("exportButton")
+
         self.valueLabel_tab1 = QtWidgets.QLabel(self.tab_1)
         self.valueLabel_tab1.setGeometry(QtCore.QRect(470, 40, 91, 21))
         self.valueLabel_tab1.setObjectName("valueLabel_tab1")
+
         self.paraLabel_tab1 = QtWidgets.QLabel(self.tab_1)
         self.paraLabel_tab1.setGeometry(QtCore.QRect(320, 40, 91, 21))
         self.paraLabel_tab1.setObjectName("paraLabel_tab1")
+
         self.nameLabel_tab1 = QtWidgets.QLabel(self.tab_1)
         self.nameLabel_tab1.setGeometry(QtCore.QRect(10, 40, 121, 21))
         self.nameLabel_tab1.setObjectName("nameLabel_tab1")
+
         self.clearButton = QtWidgets.QPushButton(self.tab_1)
         self.clearButton.setGeometry(QtCore.QRect(810, 410, 161, 31))
         self.clearButton.setObjectName("clearButton")
+
         self.addButton = QtWidgets.QPushButton(self.tab_1)
         self.addButton.setGeometry(QtCore.QRect(310, 500, 111, 31))
         self.addButton.setObjectName("addButton")
+
         self.startButton = QtWidgets.QPushButton(self.tab_1)
         self.startButton.setGeometry(QtCore.QRect(660, 40, 111, 111))
         self.startButton.setObjectName("startButton")
@@ -128,9 +138,9 @@ class Ui_MainWindow(object):
         self.logo_2.setGeometry(QtCore.QRect(810, 20, 171, 111))
         self.logo_2.setObjectName("logo_2")
 
-        self.exportButton_tab2 = QtWidgets.QPushButton(self.tab_2)
-        self.exportButton_tab2.setGeometry(QtCore.QRect(840, 440, 131, 91))
-        self.exportButton_tab2.setObjectName("exportButton_tab2")
+        self.export_button_2 = QtWidgets.QPushButton(self.tab_2)
+        self.export_button_2.setGeometry(QtCore.QRect(840, 440, 131, 91))
+        self.export_button_2.setObjectName("exportButton_tab2")
 
         self.pathBox_tab2 = QtWidgets.QLineEdit(self.tab_2)
         self.pathBox_tab2.setGeometry(QtCore.QRect(10, 130, 271, 20))
@@ -150,7 +160,7 @@ class Ui_MainWindow(object):
         self.head_label_tab2 = QtWidgets.QLabel(self.tab_2)
         self.head_label_tab2.setGeometry(QtCore.QRect(10, 0, 181, 21))
         self.head_label_tab2.setStyleSheet("text-decoration: underline;\n"
-"font: 75 10pt \"Verdana\";")
+                                           "font: 75 10pt \"Verdana\";")
         self.head_label_tab2.setObjectName("head_label_tab2")
         self.updateButton_tab2 = QtWidgets.QPushButton(self.tab_2)
         self.updateButton_tab2.setGeometry(QtCore.QRect(700, 440, 131, 41))
@@ -172,10 +182,10 @@ class Ui_MainWindow(object):
         self.clearButton_tab2.setGeometry(QtCore.QRect(700, 490, 131, 41))
         self.clearButton_tab2.setObjectName("clearButton_tab2")
 
-        self.nameBox_tab2 = QtWidgets.QLineEdit(self.tab_2)
-        self.nameBox_tab2.setGeometry(QtCore.QRect(10, 70, 121, 20))
-        self.nameBox_tab2.setText("")
-        self.nameBox_tab2.setObjectName("nameBox_tab2")
+        self.name_box_2 = QtWidgets.QLineEdit(self.tab_2)
+        self.name_box_2.setGeometry(QtCore.QRect(10, 70, 121, 20))
+        self.name_box_2.setText("")
+        self.name_box_2.setObjectName("name_box_2")
 
         self.limitsLabel_tab2 = QtWidgets.QLabel(self.tab_2)
         self.limitsLabel_tab2.setGeometry(QtCore.QRect(320, 40, 81, 21))
@@ -247,10 +257,10 @@ class Ui_MainWindow(object):
         self.logo_3.setGeometry(QtCore.QRect(810, 20, 171, 111))
         self.logo_3.setObjectName("logo_3")
 
-        self.nameBox_tab3 = QtWidgets.QLineEdit(self.tab_3)
-        self.nameBox_tab3.setGeometry(QtCore.QRect(10, 70, 121, 20))
-        self.nameBox_tab3.setText("")
-        self.nameBox_tab3.setObjectName("nameBox_tab3")
+        self.name_box_3 = QtWidgets.QLineEdit(self.tab_3)
+        self.name_box_3.setGeometry(QtCore.QRect(10, 70, 121, 20))
+        self.name_box_3.setText("")
+        self.name_box_3.setObjectName("name_box_3")
 
         self.pathLabel_tab3 = QtWidgets.QLabel(self.tab_3)
         self.pathLabel_tab3.setGeometry(QtCore.QRect(10, 100, 121, 21))
@@ -265,11 +275,11 @@ class Ui_MainWindow(object):
         self.results_label_3.setGeometry(QtCore.QRect(10, 160, 51, 21))
         self.results_label_3.setObjectName("results_label_3")
 
-        self.resultTab_tab3 = QtWidgets.QTableWidget(self.tab_3)
-        self.resultTab_tab3.setGeometry(QtCore.QRect(10, 190, 761, 291))
-        self.resultTab_tab3.setMinimumSize(QtCore.QSize(671, 0))
-        self.resultTab_tab3.setObjectName("resultTab_tab3")
-        self.resultTab_tab3.setRowCount(0)
+        self.result_tab_3 = QtWidgets.QTableWidget(self.tab_3)
+        self.result_tab_3.setGeometry(QtCore.QRect(10, 190, 761, 291))
+        self.result_tab_3.setMinimumSize(QtCore.QSize(671, 0))
+        self.result_tab_3.setObjectName("resultTab_tab_3")
+        self.result_tab_3.setRowCount(0)
 
         self.project_table_3 = QtWidgets.QTableWidget(self.tab_3)
         self.project_table_3.setGeometry(QtCore.QRect(810, 190, 161, 161))
@@ -299,9 +309,9 @@ class Ui_MainWindow(object):
         self.projectLabel3_tab3.setGeometry(QtCore.QRect(810, 160, 91, 21))
         self.projectLabel3_tab3.setObjectName("projectLabel3_tab3")
 
-        self.exportButton = QtWidgets.QPushButton(self.tab_3)
-        self.exportButton.setGeometry(QtCore.QRect(10, 500, 111, 31))
-        self.exportButton.setObjectName("exportButton")
+        self.export_button_1 = QtWidgets.QPushButton(self.tab_3)
+        self.export_button_1.setGeometry(QtCore.QRect(10, 500, 111, 31))
+        self.export_button_1.setObjectName("exportButton")
 
         self.nameLabel_tab3 = QtWidgets.QLabel(self.tab_3)
         self.nameLabel_tab3.setGeometry(QtCore.QRect(10, 40, 121, 21))
@@ -358,7 +368,9 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.updateButton.setText(_translate("MainWindow", "Update Table"))
-        self.logo_1.setText(_translate("MainWindow", "<html><head/><body><p><img src=\":/newPrefix/KIT.png\"/></p></body></html>"))
+        self.logo_1.setText(_translate("MainWindow", "<html><head/><body><p>"
+                                       "<img src=\":/newPrefix/KIT.png\"/></p>"
+                                       "</body></html>"))
         self.results_label.setText(_translate("MainWindow", "Results"))
         self.saveButton.setText(_translate("MainWindow", "Save Project"))
         item = self.projectTable.horizontalHeaderItem(0)
@@ -370,7 +382,7 @@ class Ui_MainWindow(object):
         self.paraCombo_tab1.setItemText(1, _translate("MainWindow", "Annealing"))
         self.projectLabel3_tab1.setText(_translate("MainWindow", "Current Project"))
         self.drawButton.setText(_translate("MainWindow", "Draw Project"))
-        self.exportButton.setText(_translate("MainWindow", "Export to File"))
+        self.export_button_1.setText(_translate("MainWindow", "Export to File"))
         self.valueLabel_tab1.setText(_translate("MainWindow", "Parameter Value"))
         self.paraLabel_tab1.setText(_translate("MainWindow", "Search Parameter"))
         self.nameLabel_tab1.setText(_translate("MainWindow", "Sensor Name"))
@@ -382,7 +394,7 @@ class Ui_MainWindow(object):
 
         # tab 2
         self.logo_2.setText(_translate("MainWindow", "<html><head/><body><p><img src=\":/newPrefix/KIT.png\"/></p></body></html>"))
-        self.exportButton_tab2.setText(_translate("MainWindow", "Export"))
+        self.export_button_2.setText(_translate("MainWindow", "Export"))
         self.resultsLabel_tab2.setText(_translate("MainWindow", "Results"))
         self.head_label_tab2.setText(_translate("MainWindow", "Strip Mean Calculator"))
         self.updateButton_tab2.setText(_translate("MainWindow", "Update"))
