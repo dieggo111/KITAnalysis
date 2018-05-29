@@ -1,10 +1,19 @@
-# sys.path.insert(0, Path(os.getcwd()).parents[0])
+"""Globals for KITAnalysis"""
+#pylint: disable=R0903, R0902, C0103
+# import sys
 import os
-from KITPlot.KITConfig import KITConfig
 # from pathlib import Path
+# sys.path.insert(0, Path(os.getcwd()).parents[0])
+# sys.path.insert(0, Path(os.getcwd()).parents[1])
+# print(sys.path)
+from KITPlot.KITConfig import KITConfig
 
 class InitGlobals(object):
+    """Class containing several variables providing important values for
+    KITAnalysis gui"""
     def __init__(self, cwd=os.getcwd()):
+        """Initialize global values, create cfg and output folder and Settings
+        file if necessary."""
         # create cfg/output folder
         if not os.path.exists(os.path.join(cwd, "cfg")):
             os.mkdir("cfg")
@@ -31,14 +40,15 @@ class InitGlobals(object):
                         "C_int"    : [0.3e-12, 1.3e-12]}
                 },
                 "DefaultCfgs": {
-                    "SignalVoltage"   : os.path.join("Resources", "ALiBaVa_vs_default.cfg"),
-                    "SignalAnnealing" : os.path.join("Resources", "ALiBaVa_as_default.cfg"),
-                    "R_int"           : os.path.join("Resources", "Rint_default.cfg"),
-                    "C_int"           : os.path.join("Resources", "Cint_default.cfg"),
-                    "R_poly_dc"       : os.path.join("Resources", "Rpoly_default.cfg"),
-                    "Pinhole"         : os.path.join("Resources", "Pinhole_default.cfg"),
-                    "CC"              : os.path.join("Resources", "CC_default.cfg"),
-                    "I_leak_dc"       : os.path.join("Resources", "Ileak_default.cfg")}})
+                    "SignalVoltage"   : "ALiBaVa_vs_default.cfg",
+                    "SignalAnnealing" : "ALiBaVa_as_default.cfg",
+                    "R_int"           : "Rint_default.cfg",
+                    "C_int"           : "Cint_default.cfg",
+                    "R_poly_dc"       : "Rpoly_default.cfg",
+                    "Pinhole"         : "Pinhole_default.cfg",
+                    "CC"              : "CC_default.cfg",
+                    "I_leak_dc"       : "Ileak_default.cfg",
+                    "Alpha"           : "Alpha_default.cfg"}})
             new.write("Settings.cfg")
 
         # load gloabals and default values
@@ -57,6 +67,11 @@ class InitGlobals(object):
         # accepted projects
         self.projects = ["HPK_2S_I", "HPK_2S_II", "CEC BabyStd", "CEC Bstd",
                          "CEC BPA", "CEC Badd", "CalibrationDiodes"]
+
+        # measurement parameters
+        self.strip_paras = ["R_int", "R_int_Ramp", "R_poly_dc", "I_leak_dc",
+                            "C_int", "CC", "Pinhole", "C_int_Ramp"]
+        self.std_paras = ["C_tot", "I_tot"]
 
 
         # set column index dicts
@@ -85,6 +100,7 @@ class InitGlobals(object):
                      "pid"          : 2,
                      "fluence"      : 3,
                      "annealing"    : 4,
-                     "I@V"          : 5,
-                     "I_norm@V"     : 6,
-                     "obj"          : 7}
+                     "I_0@V"        : 5,
+                     "I@V"          : 6,
+                     "I_norm@V"     : 7,
+                     "obj"          : 8}

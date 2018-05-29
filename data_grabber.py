@@ -3,6 +3,7 @@ import sys
 import os
 from pathlib import Path
 import numpy as np
+# from Resources.InitGlobals import InitGlobals
 # assuming that "KITPlot" is one dir above top level
 sys.path.insert(0, str(Path(os.getcwd()).parents[0]))
 from KITPlot.KITSearch import KITSearch
@@ -133,12 +134,13 @@ def reshuffle_for_alpha(data, tar_volt, volume):
         if data[sec]["fluence"] != 0:
             data_lst.append({"name" : data[sec]["name"],
                              "voltage" : tar_volt,
+                             "I_0@V" : curr_0_dict[data[sec]["name"]][0],
                              "I_norm@V" : norm_curr(\
-                                    curr_dict[data[sec]["name"]],
+                                    curr_dict[data[sec]["name"]][0],
                                     volume,
-                                    tar_volt,
-                                    curr_0_dict[data[sec]["name"]]),
-                             "I@V" : curr_dict[data[sec]["name"]],
+                                    curr_dict[data[sec]["name"]][1],
+                                    curr_0_dict[data[sec]["name"]][0]),
+                             "I@V" : curr_dict[data[sec]["name"]][0],
                              "pid" : data[sec]["PID"],
                              "para" : data[sec]["paraY"],
                              "annealing" : format_ann(data[sec]["annealing"]),
@@ -287,9 +289,9 @@ def find_curr(datax, datay, datat, irr, tar_volt):
     for x_val, y_val, temp_val in zip(datax, datay, datat):
         if (abs(tar_volt)*0.99) < abs(x_val) < (abs(tar_volt)*1.01):
             if irr is True and (temp*1.05) < temp_val < (temp*0.95):
-                return y_val
+                return (y_val, temp_val)
             if irr is False and (temp*0.95) < temp_val < (temp*1.05):
-                return y_val
+                return (y_val, temp_val)
     return 0
 
 def format_flu_par(flu, par):
@@ -317,6 +319,6 @@ def norm_curr(curr, volume, temp, curr_0):
     """Normalize current to volume and 20°C."""
     delta = curr/volume - curr_0/volume
     if temp < 19:
-        delta = delta*(293/(273-temp))**2*np.exp(-1.21/(2*1.38*10**-23)\
-                *1.6*(10**-19)*(1/293-1/(273-temp)))
+        delta = delta*(293/(273+temp))**2*np.exp(-1.21/(2*1.38*10**-23)\
+                *1.6*(10**-19)*(1/293-1/(273+temp)))
     return delta

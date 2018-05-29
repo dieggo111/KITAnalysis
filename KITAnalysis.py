@@ -1,6 +1,7 @@
 # pylint: disable=R1710, C0413, C0111, E0602, I1101, C0103, R0913, W0401
 import sys
 import os
+# from multiprocessing import Process
 from pathlib import Path
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import *
@@ -29,35 +30,54 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         InitGlobals.__init__(self)
 
         # tab1
-        add_header(self.resultTab_tab1, len(self.tab1.keys())-1, self.tab1)
-        adjust_header(self.projectTable, 1, "Stretch")
-        set_combo_box(self.project_combo_3, self.projects)
+        add_header(self.result_tab_1, len(self.tab1.keys())-1, self.tab1)
+        adjust_header(self.project_tab_1, 1, "Stretch")
+        set_combo_box(self.project_combo_1, self.projects)
         self.updateButton.clicked.connect(self.update_tab1)
-        self.startButton.clicked.connect(lambda: self.start_search(self.resultTab_tab1))
-        self.export_button_1.clicked.connect(lambda: self.export_table(self.resultTab_tab1))
-        self.addButton.clicked.connect(self.add_tab1)
-        self.clearButton.clicked.connect(lambda: self.clear(self.projectTable))
-        self.saveButton.clicked.connect(self.save_tab1)
-        self.drawButton.clicked.connect(self.draw)
-        self.projectList = []
+        self.startButton.clicked.connect(lambda: self.start_search(self.result_tab_1))
+        self.export_button_1.clicked.connect(lambda: self.export_table(self.result_tab_1))
+        self.add_button_1.clicked.connect(self.add_to_project_1)
+        self.clear_button_1.clicked.connect(lambda: self.clear(self.project_tab_1))
+        self.save_button_1.clicked.connect(lambda: self.save(\
+                os.path.join(self.path_box_1.text(),
+                             self.project_box_1.text()),
+                self.project_lst_1,
+                self.project_tab_1))
+        self.draw_button_1.clicked.connect(lambda: self.draw(1))
+        self.project_lst_1 = []
         self.seed_adc = {}
+        self.name_lst_1 = []
 
         # tab 2
-        add_header(self.resultTab_tab2, len(self.tab2.keys())-1, self.tab2)
+        add_header(self.result_tab_2, len(self.tab2.keys())-1, self.tab2)
         set_combo_box(self.project_combo_2, self.projects)
-        self.startButton_tab2.clicked.connect(lambda: self.start_search(self.resultTab_tab2))
-        self.clearButton_tab2.clicked.connect(lambda: self.clear(self.resultTab_tab2))
+        set_combo_box(self.para_combo_2, ["*"] + self.strip_paras)
+        self.start_button_2.clicked.connect(\
+                lambda: self.start_search(self.result_tab_2))
+        self.clearButton_tab2.clicked.connect(\
+                lambda: self.clear(self.result_tab_2))
         self.updateButton_tab2.clicked.connect(self.update_tab2)
-        self.export_button_2.clicked.connect(lambda: self.export_table(self.resultTab_tab2))
+        self.export_button_2.clicked.connect(\
+                lambda: self.export_table(self.result_tab_2))
         self.searchResult_tab2 = []
         self.buttons = []
 
         # tab 3
         add_header(self.result_tab_3, len(self.tab3.keys())-1, self.tab3)
-        adjust_header(self.project_table_3, 1, "Stretch")
+        adjust_header(self.project_tab_3, 1, "Stretch")
         set_combo_box(self.project_combo_3, self.projects)
-        self.start_button_3.clicked.connect(lambda: self.start_search(self.result_tab_3))
+        self.save_button_3.clicked.connect(lambda: self.save(\
+                os.path.join(self.path_box_3.text(),
+                             self.project_box_3.text()),
+                self.project_lst_3,
+                self.project_tab_3))
+        self.add_button_3.clicked.connect(self.add_to_project_3)
+        self.clear_button_3.clicked.connect(lambda: self.clear(self.project_tab_3))
+        self.draw_button_3.clicked.connect(lambda: self.draw(3))
+        self.start_button_3.clicked.connect(\
+                lambda: self.start_search(self.result_tab_3))
         self.project_lst_3 = []
+        self.name_lst_3 = []
 
         self.set_def_values()
 
@@ -68,13 +88,13 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         """
         self.valueBox_tab1.setText("600")
         self.name_box_1.setText("KIT_Test_07")
-        self.pathBox_tab1.setText(self.outputPath)
-        self.projectBox_tab1.setText("NewProject")
+        self.path_box_1.setText(self.outputPath)
+        self.project_box_1.setText("NewProject")
         # self.name_box_2.setText("No_Pstop_06")
         self.name_box_2.setText("No_Pstop_06")
         self.project_combo_2.setCurrentIndex(self.project_combo_2.findText(\
             "HPK_2S_II", QtCore.Qt.MatchFixedString))
-        self.paraCombo_tab2.setCurrentIndex(self.paraCombo_tab2.findText(\
+        self.para_combo_2.setCurrentIndex(self.para_combo_2.findText(\
             "R_int_Ramp", QtCore.Qt.MatchFixedString))
         self.pathBox_tab2.setText(self.outputPath)
 
@@ -86,47 +106,60 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
 
         self.voltage_box.setText("300")
         # self.name_box_3.setText("FBK_W%")
-        self.name_box_3.setText("FBK_W5_07")
+        self.name_box_3.setText("FBK_W5%")
         self.path_box_3.setText(self.outputPath)
-        self.project_box_3.setText("NewProject")
-        self.volume_box.setText("0.005")
+        self.project_box_3.setText("AlphaPlot")
+        self.volume_box.setText("0.01125")
         self.project_combo_3.setCurrentIndex(self.project_combo_3.findText(\
             "CalibrationDiodes", QtCore.Qt.MatchFixedString))
         self.tabWidget.setCurrentIndex(2)
 
 
     def start_search(self, tab):
-        """Starts to search data from DB. Executed when the start button is hit.
-        Data are then sorted by DataGrabber class and visualized by writing them
-        into GUI table.
+        """Executed when the start button is hit.Data are visualized by
+        writing them into GUI table.
         """
         self.clear(tab)
-        self.statusbar.showMessage("Beginn search...")
-        try:
-            grabber = DataGrabber(self.db_config)
-            if tab == self.resultTab_tab1:
-                data_lst = grabber.alibava_search(self.name_box_1.text(),
-                                                  self.project_combo_1.currentText(),
-                                                  self.paraCombo_tab1.currentText(),
-                                                  self.valueBox_tab1.text())
-            if tab == self.resultTab_tab2:
-                data_lst = grabber.strip_search(self.name_box_2.text(),
-                                                self.project_combo_2.currentText(),
-                                                self.paraCombo_tab2.currentText(),
-                                                self.limit_dic)
-            if tab == self.result_tab_3:
-                data_lst = grabber.alpha_search(self.name_box_3.text(),
-                                                self.project_combo_3.currentText(),
-                                                self.voltage_box.text(),
-                                                self.volume_box.text())
+        self.statusbar.showMessage("Searching...")
 
-            if data_lst == {}:
-                raise ValueError
+        if tab == self.result_tab_1:
+            search_paras = [self.name_box_1.text(),
+                            self.project_combo_1.currentText(),
+                            self.para_combo_1.currentText(),
+                            self.valueBox_tab1.text()]
+            print(*search_paras)
+        data_lst = self.search_subprocess(tab)
+        # p = Process(target=self.search_subprocess, args=(tab,))
+        # p.start()
+        # p.join()
+        self.statusbar.showMessage("Search completed...")
+
+        if data_lst == {}:
+            self.statusbar.showMessage("Couldn't find data that met the requirements...")
+        else:
             for dic in data_lst:
                 self.write_to_table(dic, tab)
-            self.statusbar.showMessage("Search completed...")
-        except ValueError:
-            self.statusbar.showMessage("Couldn't find data that met the requirements...")
+
+    def search_subprocess(self, tab):
+        """Outsourced data search method. Starts to search data from DB. Data
+        are then sorted by DataGrabber class"""
+        grabber = DataGrabber(self.db_config)
+        if tab == self.result_tab_1:
+            data_lst = grabber.alibava_search(self.name_box_1.text(),
+                                              self.project_combo_1.currentText(),
+                                              self.para_combo_1.currentText(),
+                                              self.valueBox_tab1.text())
+        if tab == self.result_tab_2:
+            data_lst = grabber.strip_search(self.name_box_2.text(),
+                                            self.project_combo_2.currentText(),
+                                            self.para_combo_2.currentText(),
+                                            self.limit_dic)
+        if tab == self.result_tab_3:
+            data_lst = grabber.alpha_search(self.name_box_3.text(),
+                                            self.project_combo_3.currentText(),
+                                            self.voltage_box.text(),
+                                            self.volume_box.text())
+        return data_lst
 
     def write_to_table(self, data_dict, tab):
         """ Fill table with data."""
@@ -134,17 +167,17 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         row_position = tab.rowCount()
         tab.insertRow(row_position)
 
-        if tab == self.resultTab_tab1:
+        if tab == self.result_tab_1:
             ass_dict = self.tab1
             name = self.name_box_1.text()
             project = self.project_combo_1.currentText()
             add_checkbox(tab, row_position, self.tab1["obj"])
-            self.resultTab_tab1.setColumnWidth(self.tab1["obj"], 47)
-        if tab == self.resultTab_tab2:
+            self.result_tab_1.setColumnWidth(self.tab1["obj"], 47)
+        if tab == self.result_tab_2:
             ass_dict = self.tab2
             name = self.name_box_2.text()
             project = self.project_combo_2.currentText()
-            add_button(self.resultTab_tab2, self.buttons,
+            add_button(self.result_tab_2, self.buttons,
                        row_position, self.tab2["obj"],
                        "Preview", self.preview, data_dict)
         if tab == self.result_tab_3:
@@ -152,12 +185,13 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
             name = self.name_box_3.text()
             project = self.project_combo_3.currentText()
             add_checkbox(tab, row_position, self.tab3["obj"])
+            self.result_tab_3.setColumnWidth(self.tab3["obj"], 47)
 
         for col in ass_dict:
             if col == "name" and tab != self.result_tab_3:
                 tab.setItem(row_position, ass_dict[col],
                             QTableWidgetItem(name))
-            if col == "project":
+            elif col == "project":
                 tab.setItem(row_position, ass_dict[col],
                             QTableWidgetItem(project))
             elif col == "seed":
@@ -170,21 +204,22 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
                 tab.setItem(row_position, ass_dict[col],
                             QTableWidgetItem(dic[col]))
 
-
     def clear(self, tab):
-        if tab == self.projectTable:
-            self.projectList = []
-        elif tab == self.resultTab_tab2:
+        if tab == self.project_tab_1:
+            self.project_lst_1 = []
+        if tab == self.project_tab_3:
+            self.project_lst_3 = []
+        elif tab == self.result_tab_2:
             self.buttons = []
         tab.setRowCount(0)
 
     def update_tab1(self):
-        for i in range(0, self.resultTab_tab1.rowCount()):
-            new_gain = int(self.resultTab_tab1.item(i, self.tab1["gain"]).text())
-            run = int(self.resultTab_tab1.item(i, self.tab1["run"]).text())
+        for i in range(0, self.result_tab_1.rowCount()):
+            new_gain = int(self.result_tab_1.item(i, self.tab1["gain"]).text())
+            run = int(self.result_tab_1.item(i, self.tab1["run"]).text())
             new_seed = str(round(self.seed_adc[run]*new_gain))
-            self.resultTab_tab1.setItem(i, self.tab1["seed"],
-                                        QTableWidgetItem(new_seed))
+            self.result_tab_1.setItem(i, self.tab1["seed"],
+                                      QTableWidgetItem(new_seed))
         self.statusbar.showMessage("Table updated...")
         return True
 
@@ -198,14 +233,14 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
                     self.limit_dic[self.limitTable.\
                     horizontalHeaderItem(column).text()][row] \
                     = float(self.limitTable.item(row, column).text())
-        self.clear(self.resultTab_tab2)
-        self.start_search(self.resultTab_tab2)
+        self.clear(self.result_tab_2)
+        self.start_search(self.result_tab_2)
         return True
 
     def export_table(self, tab):
         """Exports content of GUI table to .txt file."""
         x = []
-        if tab == self.resultTab_tab1:
+        if tab == self.result_tab_1:
             y = tab.columnCount()-2
             for row in range(0, tab.rowCount()):
                 for col in range(0, tab.columnCount()-1):
@@ -213,10 +248,10 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
             if x == []:
                 self.statusbar.showMessage("There is nothing to export...")
             else:
-                self.write(x, y, path=self.pathBox_tab1.text(),
-                           name=self.projectBox_tab1.text())
+                self.write(x, y, path=self.path_box_1.text(),
+                           name=self.project_box_1.text())
 
-        elif tab == self.resultTab_tab2:
+        elif tab == self.result_tab_2:
             y = tab.columnCount()-3
             for row in range(0, tab.rowCount()):
                 for col in range(0, tab.columnCount()-2):
@@ -238,54 +273,86 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
             y = dic["data"]
 
         kPlot = KITPlot([(x, y)],
-                        defaultCfg=os.path.join("Resources", self.defaultCfgDic\
+                        defaultCfg=os.path.join(self.defaultCfgDic\
                                    [dic["para"].replace("_Ramp", "")]),
                         name=dic["para"].replace("_Ramp", ""))
-        kPlot.draw("matplotlib")
+        kPlot.draw()
         # kPlot.saveCanvas()
         kPlot.showCanvas()
 
+    def add_to_project_3(self):
+        """Add data from result table on tab 3 to project table/list in order
+        to print data."""
+        item_lst = is_checked(self.result_tab_3, self.tab3["obj"])
+        for row in range(0, self.result_tab_3.rowCount()):
+            if row in item_lst:
+                x = []
+                y = []
+                flu = self.result_tab_3.item(row,
+                                             self.tab3["fluence"]).text()
+                curr = self.result_tab_3.item(row,
+                                              self.tab3["I_norm@V"]).text()
+                flu = flu.replace("n", "").replace("p", "").replace("np", "")
+                x.append(float(flu))
+                y.append(float(curr))
+                name = self.result_tab_3.item(row, self.tab3["name"]).text() \
+                       + " (" \
+                       + self.result_tab_3.item(row, self.tab3["project"]).text() \
+                       + ")"
 
-    def add_tab1(self):
-        itemList = is_checked(self.resultTab_tab1, self.tab1["obj"])
+                if {name : [x, y]} not in self.project_lst_3:
+                    self.project_lst_3.append({name : [x, y]})
+
+                    row_position = self.project_tab_3.rowCount()
+                    self.project_tab_3.insertRow(row_position)
+                    self.name_lst_3.append(self.result_tab_3.item(\
+                            row, self.tab3["name"]).text())
+                    self.project_tab_3.setItem(row_position, 0,
+                                               QTableWidgetItem(name))
+
+    def add_to_project_1(self):
+        """Add data from result table on tab 1 to project table/list in order
+        to print data."""
+        item_lst = is_checked(self.result_tab_1, self.tab1["obj"])
         seed = []
         para = []
         try:
-            for row in range(0, self.resultTab_tab1.rowCount()):
-                if row in itemList:
-                    seed.append(float(self.resultTab_tab1.item(row, self.tab1["seed"]).text()))
-                    if self.paraCombo_tab1.currentText() == "Voltage":
-                        para.append(float(self.resultTab_tab1.item(row, \
+            for row in range(0, self.result_tab_1.rowCount()):
+                if row in item_lst:
+                    seed.append(float(self.result_tab_1.item(row, self.tab1["seed"]).text()))
+                    if self.para_combo_1.currentText() == "Voltage":
+                        para.append(float(self.result_tab_1.item(row, \
                         self.tab1["annealing"]).text()))
-                    elif self.paraCombo_tab1.currentText() == "Annealing":
-                        para.append(float(self.resultTab_tab1.item(row, \
+                    elif self.para_combo_1.currentText() == "Annealing":
+                        para.append(float(self.result_tab_1.item(row, \
                         self.tab1["voltage"]).text()))
+            name = self.result_tab_1.item(0, self.tab1["name"]).text()\
+                   + " ("\
+                   + self.result_tab_1.item(0, self.tab1["project"]).text()\
+                   + ")"
 
-            if [para, seed] in self.projectList:
+            if {name : [para, seed]} in self.project_lst_1:
                 self.statusbar.showMessage("Item has already been added to project...")
             else:
-                self.projectList.append([para, seed])
+                self.project_lst_1.append({name : [para, seed]})
 
                 # add to project table
-                row_position = self.projectTable.rowCount()
-                self.projectTable.insertRow(row_position)
-                name = self.resultTab_tab1.item(0, self.tab1["name"]).text()\
-                       + " ("\
-                       + self.resultTab_tab1.item(0, self.tab1["project"]).text()\
-                       + ")"
-                self.projectTable.setItem(row_position, 0, QTableWidgetItem(name))
+                row_position = self.project_tab_1.rowCount()
+                self.project_tab_1.insertRow(row_position)
+                self.name_lst_1.append(name)
+                self.project_tab_1.setItem(row_position, 0, QTableWidgetItem(name))
         except AttributeError:
-            self.clear(self.projectTable)
+            self.clear(self.project_tab_1)
             self.statusbar.showMessage("There is nothing to add...")
 
-    def save_tab1(self):
-        new_path = os.path.join(self.pathBox_tab1.text(),
-                                self.projectBox_tab1.text())
-        if os.path.exists(new_path) is False:
-            os.mkdir(new_path)
-        for i, graph in enumerate(self.projectList):
-            self.write(graph[0], graph[1], path=new_path,
-                       name=self.projectTable.item(i, 0).text())
+    def save(self, path, project_lst, tab):
+        # new_path = os.path.join(self.pathBox_tab1.text(),
+        #                         self.project_box_1.text())
+        if os.path.exists(path) is False:
+            os.mkdir(path)
+        for i, dic in enumerate(project_lst):
+            self.write(list(dic.values())[0][0], list(dic.values())[0][1],
+                       path=path, name=tab.item(i, 0).text())
         self.statusbar.showMessage("Project saved...")
         return True
 
@@ -298,13 +365,16 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
     #     #     pass
     #     return True
 
-    def draw(self):
+    def draw(self, tab_nr):
         """ projectList contains lists for each graph to be drawn looking like
             [voltage,annealing,seed]
         """
         # check if there's already a cfg file with the same name (this is
         # causing a lot of problems because of the entryList in cfg file)
-        cfgName = self.projectBox_tab1.text() + ".cfg"
+        if tab_nr == 1:
+            cfgName = self.project_box_1.text() + ".cfg"
+        if tab_nr == 3:
+            cfgName = self.project_box_3.text() + ".cfg"
         i = 1
         while True:
             if cfgName in os.listdir(os.path.join("cfg")):
@@ -312,17 +382,35 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
                 i += 1
             else:
                 break
+        try:
+            if tab_nr == 1 and self.para_combo_1.currentText() == "Voltage":
+                lst = [list(dic.values())[0] for dic in self.project_lst_1]
+                kPlot = KITPlot(lst,
+                                defaultCfg=self.defaultCfgDic["SignalVoltage"],
+                                name=cfgName,
+                                name_lst=self.name_lst_1)
+                kPlot.draw()
+            if tab_nr == 1 and self.para_combo_1.currentText() == "Annealing":
+                lst = [list(dic.values())[0] for dic in self.project_lst_1]
+                kPlot = KITPlot(lst,
+                                defaultCfg=self.defaultCfgDic["SignalAnnealing"],
+                                name=cfgName,
+                                name_lst=self.name_lst_1)
+                kPlot.draw()
+            if tab_nr == 3:
+                lst = [list(xy_pair.values())[0] for xy_pair in self.project_lst_3]
+                kPlot = KITPlot(lst,
+                                defaultCfg=self.defaultCfgDic["Alpha"],
+                                name=cfgName,
+                                name_lst=self.name_lst_3)
+                f, t = kPlot.get_fit(lst)
+                kPlot.draw()
+                fig = kPlot.getCanvas()
+                kPlot.addLodger(fig, f, t)
 
-        if self.paraCombo_tab1.currentText() == "Voltage":
-            kPlot = KITPlot(self.projectList,
-                            defaultCfg=self.defaultCfgDic["SignalVoltage"],
-                            name=cfgName)
-        elif self.paraCombo_tab1.currentText() == "Annealing":
-            kPlot = KITPlot(self.projectList,
-                            defaultCfg=self.defaultCfgDic["SignalAnnealing"],
-                            name=cfgName)
-        kPlot.draw("matplotlib")
-        kPlot.showCanvas(save=True)
+            kPlot.showCanvas(save=True)
+        except TypeError:
+            self.statusbar.showMessage("There's nothing to draw...")
         return True
 
     def write(self, x, y, z=None, path=None, name=None):
@@ -333,7 +421,7 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
 
         if not os.path.exists(path):
             raise ValueError("Given path does not exist.")
-        with open(path + name + ".txt", 'w') as File:
+        with open(os.path.join(path, name + ".txt"), 'w') as File:
             # export full table
             if isinstance(y, int) and z is None:
                 for i, el in enumerate(x):
@@ -353,11 +441,15 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
                 self.statusbar.showMessage("An error occured while saving...")
 
             File.close()
-            print("Data written into %s" %(path+name+".txt"))
+            print("Data written into %s" %os.path.join(path, name + ".txt"))
         return True
-###########
-#Functions#
-###########
+
+
+
+
+#################
+####Functions####
+#################
 
 def convert_dict(dic):
     """Convert all key and values of a data dict and its nested items into
@@ -366,21 +458,21 @@ def convert_dict(dic):
     try:
         return {str(abs(round(key))): convert_value(val) for key, val in dic.items()}
     except TypeError:
-        return {key: convert_value(val) for key, val in dic.items()}
+        return {key: convert_value(val, key) for key, val in dic.items()}
 
 def convert_list(lst):
     return [convert_value(item) for item in lst]
 
-def convert_value(val):
+def convert_value(val, key=None):
     if isinstance(val, dict):
         return convert_dict(val)
     elif isinstance(val, list):
         return convert_list(val)
     elif isinstance(val, (int, float)):
-        if abs(val) < 0.001:
-            return "{:0.3e}".format(abs(val))
-        if 0.001 < abs(val) <= 1:
+        if key == "disc_ratio":
             return str(abs(round(val, 2)))
+        elif 0 < abs(val) < 0.9:
+            return "{:0.4e}".format(abs(val))
         return str(abs(round(val)))
     else:
         return val
