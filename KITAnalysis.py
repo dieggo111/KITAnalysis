@@ -1,7 +1,8 @@
 # pylint: disable=R1710, C0413, C0111, E0602, I1101, C0103, R0913, W0401
 import sys
 import os
-# from multiprocessing import Process
+from threading import Thread
+from queue import Queue, Empty
 from pathlib import Path
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import *
@@ -120,46 +121,53 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         writing them into GUI table.
         """
         self.clear(tab)
-        self.statusbar.showMessage("Searching...")
 
         if tab == self.result_tab_1:
-            search_paras = [self.name_box_1.text(),
+            search_paras = [1,
+                            self.name_box_1.text(),
                             self.project_combo_1.currentText(),
                             self.para_combo_1.currentText(),
                             self.valueBox_tab1.text()]
-            print(*search_paras)
-        data_lst = self.search_subprocess(tab)
-        # p = Process(target=self.search_subprocess, args=(tab,))
-        # p.start()
-        # p.join()
+        if tab == self.result_tab_2:
+            search_paras = [2,
+                            self.name_box_2.text(),
+                            self.project_combo_2.currentText(),
+                            self.para_combo_2.currentText(),
+                            self.limit_dic]
+        if tab == self.result_tab_3:
+            search_paras = [3,
+                            self.name_box_3.text(),
+                            self.project_combo_3.currentText(),
+                            self.voltage_box.text(),
+                            self.volume_box.text()]
+
+        queue = Queue()
+        thr = Thread(target=self.search_thread, args=(queue, search_paras,))
+        thr.start()
+        data_lst = statusbar_load(queue, self.statusbar, option="loader")
+        thr.join()
         self.statusbar.showMessage("Search completed...")
 
-        if data_lst == {}:
+        if data_lst == {} or data_lst == []:
             self.statusbar.showMessage("Couldn't find data that met the requirements...")
         else:
             for dic in data_lst:
                 self.write_to_table(dic, tab)
 
-    def search_subprocess(self, tab):
+    def search_thread(self, queue, args):
         """Outsourced data search method. Starts to search data from DB. Data
         are then sorted by DataGrabber class"""
         grabber = DataGrabber(self.db_config)
-        if tab == self.result_tab_1:
-            data_lst = grabber.alibava_search(self.name_box_1.text(),
-                                              self.project_combo_1.currentText(),
-                                              self.para_combo_1.currentText(),
-                                              self.valueBox_tab1.text())
-        if tab == self.result_tab_2:
-            data_lst = grabber.strip_search(self.name_box_2.text(),
-                                            self.project_combo_2.currentText(),
-                                            self.para_combo_2.currentText(),
-                                            self.limit_dic)
-        if tab == self.result_tab_3:
-            data_lst = grabber.alpha_search(self.name_box_3.text(),
-                                            self.project_combo_3.currentText(),
-                                            self.voltage_box.text(),
-                                            self.volume_box.text())
-        return data_lst
+        if args[0] == 1:
+            queue.put(grabber.alibava_search(args[1], args[2],
+                                             args[3], args[4]))
+        if args[0] == 2:
+            queue.put(grabber.strip_search(args[1], args[2],
+                                           args[3], args[4]))
+        if args[0] == 3:
+            queue.put(grabber.alpha_search(args[1], args[2],
+                                           args[3], args[4]))
+        queue.task_done()
 
     def write_to_table(self, data_dict, tab):
         """ Fill table with data."""
@@ -451,6 +459,25 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
 #################
 ####Functions####
 #################
+
+def statusbar_load(queue, statusbar_obj, option="spinner"):
+    """Some fancy statusbar job while queuing"""
+    data = None
+    i = 0
+    while data is None:
+        try:
+            data = queue.get(timeout=0.1)
+        except Empty:
+            if option == "spinner":
+                status = ["-", "\\", "|", "/"]
+                statusbar_obj.showMessage("Searching  [" + status[i%4] + "]")
+            if option == "loader":
+                status = "|"
+                space = " "
+                statusbar_obj.showMessage("Searching   [" + (i%31)*status
+                                          + (30-i%31)*space + "]")
+            i = i + 1
+    return data
 
 def convert_dict(dic):
     """Convert all key and values of a data dict and its nested items into
