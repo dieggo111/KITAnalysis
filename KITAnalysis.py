@@ -10,6 +10,7 @@ from PyQt5.QtGui import *
 from data_grabber import DataGrabber
 from Resources.InitGlobals import InitGlobals
 from gui import Ui_MainWindow
+import helpers
 # assuming that "KITPlot" is one dir above top level
 sys.path.insert(0, Path(os.getcwd()).parents[0])
 from KITPlot import KITPlot
@@ -31,9 +32,9 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         InitGlobals.__init__(self)
 
         # tab1
-        add_header(self.result_tab_1, len(self.tab1.keys())-1, self.tab1)
-        adjust_header(self.project_tab_1, 1, "Stretch")
-        set_combo_box(self.project_combo_1, self.projects)
+        helpers.add_header(self.result_tab_1, len(self.tab1.keys())-1, self.tab1)
+        helpers.adjust_header(self.project_tab_1, 1, "Stretch")
+        helpers.set_combo_box(self.project_combo_1, self.projects)
         self.updateButton.clicked.connect(self.update_tab1)
         self.startButton.clicked.connect(lambda: self.start_search(self.result_tab_1))
         self.export_button_1.clicked.connect(lambda: self.export_table(self.result_tab_1))
@@ -50,9 +51,9 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         self.name_lst_1 = []
 
         # tab 2
-        add_header(self.result_tab_2, len(self.tab2.keys())-1, self.tab2)
-        set_combo_box(self.project_combo_2, self.projects)
-        set_combo_box(self.para_combo_2, ["*"] + self.strip_paras)
+        helpers.add_header(self.result_tab_2, len(self.tab2.keys())-1, self.tab2)
+        helpers.set_combo_box(self.project_combo_2, self.projects)
+        helpers.set_combo_box(self.para_combo_2, ["*"] + self.strip_paras)
         self.start_button_2.clicked.connect(\
                 lambda: self.start_search(self.result_tab_2))
         self.clearButton_tab2.clicked.connect(\
@@ -64,9 +65,9 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         self.buttons = []
 
         # tab 3
-        add_header(self.result_tab_3, len(self.tab3.keys())-1, self.tab3)
-        adjust_header(self.project_tab_3, 1, "Stretch")
-        set_combo_box(self.project_combo_3, self.projects)
+        helpers.add_header(self.result_tab_3, len(self.tab3.keys())-1, self.tab3)
+        helpers.adjust_header(self.project_tab_3, 1, "Stretch")
+        helpers.set_combo_box(self.project_combo_3, self.projects)
         self.save_button_3.clicked.connect(lambda: self.save(\
                 os.path.join(self.path_box_3.text(),
                              self.project_box_3.text()),
@@ -171,7 +172,7 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
 
     def write_to_table(self, data_dict, tab):
         """ Fill table with data."""
-        dic = convert_dict(data_dict)
+        dic = helpers.convert_dict(data_dict)
         row_position = tab.rowCount()
         tab.insertRow(row_position)
 
@@ -179,20 +180,20 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
             ass_dict = self.tab1
             name = self.name_box_1.text()
             project = self.project_combo_1.currentText()
-            add_checkbox(tab, row_position, self.tab1["obj"])
+            helpers.add_checkbox(tab, row_position, self.tab1["obj"])
             self.result_tab_1.setColumnWidth(self.tab1["obj"], 47)
         if tab == self.result_tab_2:
             ass_dict = self.tab2
             name = self.name_box_2.text()
             project = self.project_combo_2.currentText()
-            add_button(self.result_tab_2, self.buttons,
-                       row_position, self.tab2["obj"],
-                       "Preview", self.preview, data_dict)
+            helpers.add_button(self.result_tab_2, self.buttons,
+                               row_position, self.tab2["obj"],
+                               "Preview", self.preview, data_dict)
         if tab == self.result_tab_3:
             ass_dict = self.tab3
             name = self.name_box_3.text()
             project = self.project_combo_3.currentText()
-            add_checkbox(tab, row_position, self.tab3["obj"])
+            helpers.add_checkbox(tab, row_position, self.tab3["obj"])
             self.result_tab_3.setColumnWidth(self.tab3["obj"], 47)
 
         for col in ass_dict:
@@ -479,100 +480,100 @@ def statusbar_load(queue, statusbar_obj, option="spinner"):
             i = i + 1
     return data
 
-def convert_dict(dic):
-    """Convert all key and values of a data dict and its nested items into
-    strings.
-    """
-    try:
-        return {str(abs(round(key))): convert_value(val) for key, val in dic.items()}
-    except TypeError:
-        return {key: convert_value(val, key) for key, val in dic.items()}
-
-def convert_list(lst):
-    return [convert_value(item) for item in lst]
-
-def convert_value(val, key=None):
-    if isinstance(val, dict):
-        return convert_dict(val)
-    elif isinstance(val, list):
-        return convert_list(val)
-    elif isinstance(val, (int, float)):
-        if key == "disc_ratio":
-            return str(abs(round(val, 2)))
-        elif 0 < abs(val) < 0.9:
-            return "{:0.4e}".format(abs(val))
-        return str(abs(round(val)))
-    else:
-        return val
-
-def is_checked(tab, col):
-    item_list = []
-    for i in range(tab.rowCount()):
-        parent = tab.cellWidget(i, col)
-        if parent.findChild(QCheckBox).checkState() == QtCore.Qt.Checked:
-            item_list.append(i)
-    return item_list
-
-def add_checkbox(tab_obj, row_nr, col_nr):
-    """Add a checked checkbox in the center of cell of specific row.
-    """
-    p_widget = QWidget()
-    p_checkbox = QCheckBox()
-    p_layout = QHBoxLayout(p_widget)
-    p_layout.addWidget(p_checkbox)
-    p_layout.setAlignment(QtCore.Qt.AlignCenter)
-    p_layout.setContentsMargins(0, 0, 0, 0)
-    p_checkbox.setCheckState(QtCore.Qt.Checked)
-    add_col(tab_obj, col_nr)
-    tab_obj.setCellWidget(row_nr, col_nr, p_widget)
-    adjust_header(tab_obj, col_nr, "Stretch")
-
-def add_col(tab_obj, col_nr):
-    """Adds a column to TableWidget object.
-    """
-    tab_obj.setColumnCount(col_nr+1)
-    item = QtWidgets.QTableWidgetItem()
-    tab_obj.setHorizontalHeaderItem(col_nr, item)
-
-def add_button(tab_obj, button_lst, row_nr, col_nr, name, fun, *args):
-    """Add a button at specific position to table.
-    """
-    button_lst.append(QPushButton(tab_obj))
-    button_lst[row_nr].setText(name)
-    add_col(tab_obj, col_nr)
-    adjust_header(tab_obj, col_nr, "Stretch")
-    tab_obj.setCellWidget(row_nr, col_nr, button_lst[row_nr])
-    button_lst[row_nr].clicked.connect(lambda: fun(*args))
-
-def adjust_header(tab_obj, count, option="ResizeToContents"):
-    """Adjusts header width to column content and table width.
-
-    Args:
-        - tab_obj (TableWidget) : table object
-        - count (int) : number of columns
-        - option (str) : viable attr of QHeaderView. 'Stretch' results in equal
-                         column width. 'ResizeToContents' adjusts the column
-                         width to content.
-    """
-    header = tab_obj.horizontalHeader()
-    for col in range(0, count):
-        header.setSectionResizeMode(col, getattr(QtWidgets.QHeaderView, option))
-
-def add_header(tab_obj, count, info_dict):
-    """Adds header objects to TableWidget."""
-    tab_obj.setColumnCount(count)
-    for col in range(0, count):
-        item = QtWidgets.QTableWidgetItem()
-        item.setText(list(info_dict.keys())[col])
-        tab_obj.setHorizontalHeaderItem(col, item)
-    adjust_header(tab_obj, count, "Stretch")
-    return True
-
-def set_combo_box(combo_obj, project_list):
-    """Adds items to QComboBox widget"""
-    for i, pro in enumerate(project_list):
-        combo_obj.addItem("")
-        combo_obj.setItemText(i, pro)
+# def convert_dict(dic):
+#     """Convert all key and values of a data dict and its nested items into
+#     strings.
+#     """
+#     try:
+#         return {str(abs(round(key))): convert_value(val) for key, val in dic.items()}
+#     except TypeError:
+#         return {key: convert_value(val, key) for key, val in dic.items()}
+#
+# def convert_list(lst):
+#     return [convert_value(item) for item in lst]
+#
+# def convert_value(val, key=None):
+#     if isinstance(val, dict):
+#         return convert_dict(val)
+#     elif isinstance(val, list):
+#         return convert_list(val)
+#     elif isinstance(val, (int, float)):
+#         if key == "disc_ratio":
+#             return str(abs(round(val, 2)))
+#         elif 0 < abs(val) < 0.9:
+#             return "{:0.4e}".format(abs(val))
+#         return str(abs(round(val)))
+#     else:
+#         return val
+#
+# def is_checked(tab, col):
+#     item_list = []
+#     for i in range(tab.rowCount()):
+#         parent = tab.cellWidget(i, col)
+#         if parent.findChild(QCheckBox).checkState() == QtCore.Qt.Checked:
+#             item_list.append(i)
+#     return item_list
+#
+# def add_checkbox(tab_obj, row_nr, col_nr):
+#     """Add a checked checkbox in the center of cell of specific row.
+#     """
+#     p_widget = QWidget()
+#     p_checkbox = QCheckBox()
+#     p_layout = QHBoxLayout(p_widget)
+#     p_layout.addWidget(p_checkbox)
+#     p_layout.setAlignment(QtCore.Qt.AlignCenter)
+#     p_layout.setContentsMargins(0, 0, 0, 0)
+#     p_checkbox.setCheckState(QtCore.Qt.Checked)
+#     add_col(tab_obj, col_nr)
+#     tab_obj.setCellWidget(row_nr, col_nr, p_widget)
+#     adjust_header(tab_obj, col_nr, "Stretch")
+#
+# def add_col(tab_obj, col_nr):
+#     """Adds a column to TableWidget object.
+#     """
+#     tab_obj.setColumnCount(col_nr+1)
+#     item = QtWidgets.QTableWidgetItem()
+#     tab_obj.setHorizontalHeaderItem(col_nr, item)
+#
+# def add_button(tab_obj, button_lst, row_nr, col_nr, name, fun, *args):
+#     """Add a button at specific position to table.
+#     """
+#     button_lst.append(QPushButton(tab_obj))
+#     button_lst[row_nr].setText(name)
+#     add_col(tab_obj, col_nr)
+#     adjust_header(tab_obj, col_nr, "Stretch")
+#     tab_obj.setCellWidget(row_nr, col_nr, button_lst[row_nr])
+#     button_lst[row_nr].clicked.connect(lambda: fun(*args))
+#
+# def adjust_header(tab_obj, count, option="ResizeToContents"):
+#     """Adjusts header width to column content and table width.
+#
+#     Args:
+#         - tab_obj (TableWidget) : table object
+#         - count (int) : number of columns
+#         - option (str) : viable attr of QHeaderView. 'Stretch' results in equal
+#                          column width. 'ResizeToContents' adjusts the column
+#                          width to content.
+#     """
+#     header = tab_obj.horizontalHeader()
+#     for col in range(0, count):
+#         header.setSectionResizeMode(col, getattr(QtWidgets.QHeaderView, option))
+#
+# def add_header(tab_obj, count, info_dict):
+#     """Adds header objects to TableWidget."""
+#     tab_obj.setColumnCount(count)
+#     for col in range(0, count):
+#         item = QtWidgets.QTableWidgetItem()
+#         item.setText(list(info_dict.keys())[col])
+#         tab_obj.setHorizontalHeaderItem(col, item)
+#     adjust_header(tab_obj, count, "Stretch")
+#     return True
+#
+# def set_combo_box(combo_obj, project_list):
+#     """Adds items to QComboBox widget"""
+#     for i, pro in enumerate(project_list):
+#         combo_obj.addItem("")
+#         combo_obj.setItemText(i, pro)
 
 
 if __name__ == '__main__':
