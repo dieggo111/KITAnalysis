@@ -1,7 +1,30 @@
 # pylint: disable=R1710, C0413, C0111, E0602, I1101, C0103, R0913, W0401
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
+
+def read_table(tab_obj, sort="col"):
+    """Reads content of table and puts it in dict.
+
+    Args:
+        - tab_obj (QTableWidget) : table object
+        - sort (str) : if 'col' then dict keys are column names, if 'row' they
+                       are sorted by row
+    """
+    dic = {}
+    if sort == "col":
+        for col in range(0, tab_obj.columnCount()):
+            name = tab_obj.horizontalHeaderItem(col).text()
+            dic[name] = []
+            for row in range(0, tab_obj.rowCount()):
+                dic[name].append(float(tab_obj.item(row, col).text()))
+    if sort == "row":
+        for row in range(0, tab_obj.rowCount()):
+            name = tab_obj.verticalHeaderItem(row).text()
+            dic[name] = []
+            for col in range(0, tab_obj.columnCount()):
+                dic[name].append(float(tab_obj.item(row, col).text()))
+    return dic
 
 def convert_dict(dic):
     """Convert all key and values of a data dict and its nested items into
@@ -82,14 +105,27 @@ def adjust_header(tab_obj, count, option="ResizeToContents"):
     for col in range(0, count):
         header.setSectionResizeMode(col, getattr(QtWidgets.QHeaderView, option))
 
-def add_header(tab_obj, count, info_dict):
-    """Adds header objects to TableWidget."""
+def add_header(tab_obj, count, name, hv="horizontal"):
+    """Adds header objects to TableWidget.
+
+    Args:
+        - tab_obj (QTableWidget) : table object
+        - count (int) : number of cells
+        - name (str) : header name
+        - hv (str) : choose horizontal or vertical header
+    """
     tab_obj.setColumnCount(count)
     for col in range(0, count):
         item = QtWidgets.QTableWidgetItem()
-        item.setText(list(info_dict.keys())[col])
-        tab_obj.setHorizontalHeaderItem(col, item)
-    adjust_header(tab_obj, count, "Stretch")
+        if isinstance(name, dict):
+            item.setText(list(name.keys())[col])
+        if isinstance(name, list):
+            item.setText(name[col])
+        if hv == "horizontal":
+            tab_obj.setHorizontalHeaderItem(col, item)
+            adjust_header(tab_obj, count, "Stretch")
+        if hv == "vertical":
+            tab_obj.setVerticalHeaderItem(col, item)
     return True
 
 def set_combo_box(combo_obj, project_list):

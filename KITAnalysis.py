@@ -1,8 +1,6 @@
-# pylint: disable=R1710, C0413, C0111, E0602, I1101, C0103, R0913, W0401
+# pylint: disable=R1710, C0413, C0111, E0602, I1101, C0103, R0913, W0401, R0902
 import sys
 import os
-from threading import Thread
-from queue import Queue, Empty
 from pathlib import Path
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import *
@@ -27,9 +25,14 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         existing, loads globals, defaults and credentials. Links buttons to
         class methods.
         """
+        super().__init__()
         Ui_MainWindow.__init__(self)
         self.setupUi(dialog)
         InitGlobals.__init__(self)
+
+        # statusbar = Statusbar()
+        # self.status = QtCore.QThread()
+        # self.statusbar.moveToThread(self.status)
 
         # tab1
         helpers.add_header(self.result_tab_1, len(self.tab1.keys())-1, self.tab1)
@@ -61,8 +64,12 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         self.updateButton_tab2.clicked.connect(self.update_tab2)
         self.export_button_2.clicked.connect(\
                 lambda: self.export_table(self.result_tab_2))
+        self.limit_button_2.clicked.connect(self.show_popup)
         self.searchResult_tab2 = []
         self.buttons = []
+        self.lim_popup = LimitTable(self.limit_dic)
+        self.lim_popup.setGeometry(QtCore.QRect(400, 400, 700, 200))
+        self.lim_popup.querry.connect(self.set_limit_dic)
 
         # tab 3
         helpers.add_header(self.result_tab_3, len(self.tab3.keys())-1, self.tab3)
@@ -93,18 +100,12 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         self.path_box_1.setText(self.outputPath)
         self.project_box_1.setText("NewProject")
         # self.name_box_2.setText("No_Pstop_06")
-        self.name_box_2.setText("No_Pstop_06")
+        self.name_box_2.setText("KIT_Test_07")
         self.project_combo_2.setCurrentIndex(self.project_combo_2.findText(\
             "HPK_2S_II", QtCore.Qt.MatchFixedString))
         self.para_combo_2.setCurrentIndex(self.para_combo_2.findText(\
             "R_int_Ramp", QtCore.Qt.MatchFixedString))
         self.pathBox_tab2.setText(self.outputPath)
-
-        for column in range(0, self.limitTable.columnCount()):
-            self.limitTable.setItem(0, column, QTableWidgetItem("{:0.1e}".format(\
-                self.limit_dic[self.limitTable.horizontalHeaderItem(column).text()][0])))
-            self.limitTable.setItem(1, column, QTableWidgetItem("{:0.1e}".format(\
-                self.limit_dic[self.limitTable.horizontalHeaderItem(column).text()][1])))
 
         self.voltage_box.setText("300")
         # self.name_box_3.setText("FBK_W%")
@@ -141,28 +142,25 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
                             self.voltage_box.text(),
                             self.volume_box.text()]
 
+        self.statusbar.showMessage("Searching...")
+
         self.thread = QtCore.QThread()
         self.search_data = SearchData(self.db_config, search_paras)
         self.search_data.moveToThread(self.thread)
         self.search_data.results.connect(self.recieve_data)
-        self.search_data.finished.connect(self.complete)
+        # self.search_data.finished.connect(self.complete)
         self.search_data.finished.connect(self.thread.quit)
         self.search_data.finished.connect(self.search_data.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
         self.thread.started.connect(self.search_data.run)
         self.thread.start()
-        # queue = Queue()
-        # thr = Thread(target=self.search_thread, args=(queue, search_paras,))
-        # thr.start()
-        # data_lst = statusbar_load(queue, self.statusbar, option="loader")
-        # thr.join()
-        # self.statusbar.showMessage("Search completed...")
+
 
     def recieve_data(self, data_lst, tab):
         if data_lst == {} or data_lst == []:
             self.statusbar.showMessage("Couldn't find data that met the requirements...")
         else:
-            print(data_lst)
+            self.statusbar.showMessage("Search complete...")
             if tab == 1:
                 tab = self.result_tab_1
             if tab == 2:
@@ -172,20 +170,6 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
             for dic in data_lst:
                 self.write_to_table(dic, tab)
 
-    # def search_thread(self, queue, args):
-    #     """Outsourced data search method. Starts to search data from DB. Data
-    #     are then sorted by DataGrabber class"""
-    #     grabber = DataGrabber(self.db_config)
-    #     if args[0] == 1:
-    #         queue.put(grabber.alibava_search(args[1], args[2],
-    #                                          args[3], args[4]))
-    #     if args[0] == 2:
-    #         queue.put(grabber.strip_search(args[1], args[2],
-    #                                        args[3], args[4]))
-    #     if args[0] == 3:
-    #         queue.put(grabber.alpha_search(args[1], args[2],
-    #                                        args[3], args[4]))
-    #     queue.task_done()
 
     def write_to_table(self, data_dict, tab):
         """ Fill table with data."""
@@ -250,15 +234,6 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         return True
 
     def update_tab2(self):
-        # get new limit values from limitTable and write them into limit_dic
-        for column in range(0, self.limitTable.columnCount()):
-            for row in range(0, 2):
-                if float(self.limitTable.item(row, column).text()) \
-                        != self.limit_dic[self.limitTable.\
-                        horizontalHeaderItem(column).text()][row]:
-                    self.limit_dic[self.limitTable.\
-                    horizontalHeaderItem(column).text()][row] \
-                    = float(self.limitTable.item(row, column).text())
         self.clear(self.result_tab_2)
         self.start_search(self.result_tab_2)
         return True
@@ -309,7 +284,7 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
     def add_to_project_3(self):
         """Add data from result table on tab 3 to project table/list in order
         to print data."""
-        item_lst = is_checked(self.result_tab_3, self.tab3["obj"])
+        item_lst = helpers.is_checked(self.result_tab_3, self.tab3["obj"])
         for row in range(0, self.result_tab_3.rowCount()):
             if row in item_lst:
                 x = []
@@ -339,7 +314,7 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
     def add_to_project_1(self):
         """Add data from result table on tab 1 to project table/list in order
         to print data."""
-        item_lst = is_checked(self.result_tab_1, self.tab1["obj"])
+        item_lst = helpers.is_checked(self.result_tab_1, self.tab1["obj"])
         seed = []
         para = []
         try:
@@ -382,15 +357,6 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         self.statusbar.showMessage("Project saved...")
         return True
 
-    # def draw_thread(self):
-    #     t = threading.Thread(target=self.draw)
-    #     t.run()
-    #     # try:
-    #         # t.run()
-    #     # except:
-    #     #     pass
-    #     return True
-
     def draw(self, tab_nr):
         """ projectList contains lists for each graph to be drawn looking like
             [voltage,annealing,seed]
@@ -425,7 +391,6 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
                 kPlot.draw()
             if tab_nr == 3:
                 lst = [list(xy_pair.values())[0] for xy_pair in self.project_lst_3]
-                print(self.project_lst_3)
                 kPlot = KITPlot(lst,
                                 defaultCfg=self.defaultCfgDic["Alpha"],
                                 name=cfgName,
@@ -471,17 +436,68 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
             print("Data written into %s" %os.path.join(path, name + ".txt"))
         return True
 
-    def complete(self):
-        self.statusbar.showMessage("Search completed...")
+    def set_limit_dic(self, dic):
+        self.limit_dic = dic
+
+    # def complete(self):
+    #     self.statusbar.showMessage("Search completed...")
         # self.progress_bar.setVisible(False)
+
+    def show_popup(self):
+        self.lim_popup.show()
+
+
+class LimitTable(QWidget):
+    querry = QtCore.pyqtSignal(dict)
+
+    def __init__(self, dic):
+        QWidget.__init__(self)
+        self.dic = dic
+
+        self.setWindowTitle("Limit Table")
+        self.limit_table = QtWidgets.QTableWidget(self)
+        self.limit_table.setGeometry(QtCore.QRect(10, 40, 681, 81))
+        self.setup_table()
+        self.limit_table.itemChanged.connect(self.update_dic)
+
+    def setup_table(self):
+
+        row_names = ["Lower Limit", "Upper Limit"]
+        col_names = list(self.dic.keys())
+        self.limit_table.setRowCount(len(row_names))
+        self.limit_table.setColumnCount(len(self.dic.keys()))
+        self.limit_table.setHorizontalHeaderLabels(col_names)
+
+        helpers.add_header(self.limit_table, len(row_names),
+                           row_names, "vertical")
+        helpers.add_header(self.limit_table, len(col_names), col_names)
+
+        for i, val in enumerate(self.dic.values()):
+            self.limit_table.setItem(0, i,
+                                     QTableWidgetItem("{:0.1e}".format(val[0])))
+            self.limit_table.setItem(1, i,
+                                     QTableWidgetItem("{:0.1e}".format(val[1])))
+
+        self.limit_table.setCornerButtonEnabled(False)
+
+    def update_dic(self):
+        self.dic = helpers.read_table(self.limit_table)
+        self.send_table()
+
+    def send_table(self):
+        self.querry.emit(self.dic)
+
+
 
 class SearchData(QtCore.QObject):
 
     finished = QtCore.pyqtSignal()
     update_progress = QtCore.pyqtSignal()
-    results = QtCore.pyqtSignal(list, int)  # set the type of object you are sending
+    # set the type of object you are sending
+    results = QtCore.pyqtSignal(list, int)
 
-    def __init__(self, cfg, *args):
+    def __init__(self, cfg, args):
+    # def __init__(self, parent, cfg, args):
         super().__init__()
         self.count = 0
         self.cfg = cfg
@@ -490,9 +506,7 @@ class SearchData(QtCore.QObject):
     def run(self):
         # search database here and emit update_progress when appropriate
         grabber = DataGrabber(self.cfg)
-        data = []
-        print(self.args)
-
+        # data = []
         if self.args[0] == 1:
             data = grabber.alibava_search(self.args[1], self.args[2],
                                           self.args[3], self.args[4])
@@ -500,138 +514,50 @@ class SearchData(QtCore.QObject):
             data = grabber.strip_search(self.args[1], self.args[2],
                                         self.args[3], self.args[4])
         if self.args[0] == 3:
-            print("here")
             data = grabber.alpha_search(self.args[1], self.args[2],
                                         self.args[3], self.args[4])
-        # while data == []:
-        # while self.count <= 100:
-        #     self.update_progress.emit()
+        # while self.count <= 50:
         #     self.count += 1
-            # pass
-        self.send_results(data)  # when done, send the results
+        #     time.sleep(0.2)
+        # print(data)
+
+        # when done, send the results
+        self.send_results(data)
         self.finished.emit()
 
     def send_results(self, results):
-        # results = {'one': 'Result One', 'two': 'Result Two', 'three': 'Result Three'}
         self.results.emit(results, self.args[0])
 
-#################
-####Functions####
-#################
+# class Statusbar(QtCore.Object):
+#     """Some fancy statusbar job while queuing"""
+#     def __init__(self, option="spinner"):
+#         super().__init__()
+#
+#     def load(self):
+#         pass
+#
+#     def show(self, msg):
+#         pass
 
-def statusbar_load(queue, statusbar_obj, option="spinner"):
-    """Some fancy statusbar job while queuing"""
-    data = None
-    i = 0
-    while data is None:
-        try:
-            data = queue.get(timeout=0.1)
-        except Empty:
-            if option == "spinner":
-                status = ["-", "\\", "|", "/"]
-                statusbar_obj.showMessage("Searching  [" + status[i%4] + "]")
-            if option == "loader":
-                status = "|"
-                space = " "
-                statusbar_obj.showMessage("Searching   [" + (i%31)*status
-                                          + (30-i%31)*space + "]")
-            i = i + 1
-    return data
+# def statusbar_load(queue, statusbar_obj, option="spinner"):
+#
+#     data = None
+#     i = 0
+#     while data is None:
+#         try:
+#             data = queue.get(timeout=0.1)
+#         except Empty:
+#             if option == "spinner":
+#                 status = ["-", "\\", "|", "/"]
+#                 statusbar_obj.showMessage("Searching  [" + status[i%4] + "]")
+#             if option == "loader":
+#                 status = "|"
+#                 space = " "
+#                 statusbar_obj.showMessage("Searching   [" + (i%31)*status
+#                                           + (30-i%31)*space + "]")
+#             i = i + 1
+#     return data
 
-# def convert_dict(dic):
-#     """Convert all key and values of a data dict and its nested items into
-#     strings.
-#     """
-#     try:
-#         return {str(abs(round(key))): convert_value(val) for key, val in dic.items()}
-#     except TypeError:
-#         return {key: convert_value(val, key) for key, val in dic.items()}
-#
-# def convert_list(lst):
-#     return [convert_value(item) for item in lst]
-#
-# def convert_value(val, key=None):
-#     if isinstance(val, dict):
-#         return convert_dict(val)
-#     elif isinstance(val, list):
-#         return convert_list(val)
-#     elif isinstance(val, (int, float)):
-#         if key == "disc_ratio":
-#             return str(abs(round(val, 2)))
-#         elif 0 < abs(val) < 0.9:
-#             return "{:0.4e}".format(abs(val))
-#         return str(abs(round(val)))
-#     else:
-#         return val
-#
-# def is_checked(tab, col):
-#     item_list = []
-#     for i in range(tab.rowCount()):
-#         parent = tab.cellWidget(i, col)
-#         if parent.findChild(QCheckBox).checkState() == QtCore.Qt.Checked:
-#             item_list.append(i)
-#     return item_list
-#
-# def add_checkbox(tab_obj, row_nr, col_nr):
-#     """Add a checked checkbox in the center of cell of specific row.
-#     """
-#     p_widget = QWidget()
-#     p_checkbox = QCheckBox()
-#     p_layout = QHBoxLayout(p_widget)
-#     p_layout.addWidget(p_checkbox)
-#     p_layout.setAlignment(QtCore.Qt.AlignCenter)
-#     p_layout.setContentsMargins(0, 0, 0, 0)
-#     p_checkbox.setCheckState(QtCore.Qt.Checked)
-#     add_col(tab_obj, col_nr)
-#     tab_obj.setCellWidget(row_nr, col_nr, p_widget)
-#     adjust_header(tab_obj, col_nr, "Stretch")
-#
-# def add_col(tab_obj, col_nr):
-#     """Adds a column to TableWidget object.
-#     """
-#     tab_obj.setColumnCount(col_nr+1)
-#     item = QtWidgets.QTableWidgetItem()
-#     tab_obj.setHorizontalHeaderItem(col_nr, item)
-#
-# def add_button(tab_obj, button_lst, row_nr, col_nr, name, fun, *args):
-#     """Add a button at specific position to table.
-#     """
-#     button_lst.append(QPushButton(tab_obj))
-#     button_lst[row_nr].setText(name)
-#     add_col(tab_obj, col_nr)
-#     adjust_header(tab_obj, col_nr, "Stretch")
-#     tab_obj.setCellWidget(row_nr, col_nr, button_lst[row_nr])
-#     button_lst[row_nr].clicked.connect(lambda: fun(*args))
-#
-# def adjust_header(tab_obj, count, option="ResizeToContents"):
-#     """Adjusts header width to column content and table width.
-#
-#     Args:
-#         - tab_obj (TableWidget) : table object
-#         - count (int) : number of columns
-#         - option (str) : viable attr of QHeaderView. 'Stretch' results in equal
-#                          column width. 'ResizeToContents' adjusts the column
-#                          width to content.
-#     """
-#     header = tab_obj.horizontalHeader()
-#     for col in range(0, count):
-#         header.setSectionResizeMode(col, getattr(QtWidgets.QHeaderView, option))
-#
-# def add_header(tab_obj, count, info_dict):
-#     """Adds header objects to TableWidget."""
-#     tab_obj.setColumnCount(count)
-#     for col in range(0, count):
-#         item = QtWidgets.QTableWidgetItem()
-#         item.setText(list(info_dict.keys())[col])
-#         tab_obj.setHorizontalHeaderItem(col, item)
-#     adjust_header(tab_obj, count, "Stretch")
-#     return True
-#
-# def set_combo_box(combo_obj, project_list):
-#     """Adds items to QComboBox widget"""
-#     for i, pro in enumerate(project_list):
-#         combo_obj.addItem("")
-#         combo_obj.setItemText(i, pro)
 
 
 if __name__ == '__main__':
