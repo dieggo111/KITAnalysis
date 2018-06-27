@@ -451,6 +451,7 @@ class LimitTable(QWidget):
     querry = QtCore.pyqtSignal(dict)
 
     def __init__(self, dic):
+        # super().___init(self)
         QWidget.__init__(self)
         self.dic = dic
 
@@ -464,6 +465,8 @@ class LimitTable(QWidget):
 
         row_names = ["Lower Limit", "Upper Limit"]
         col_names = list(self.dic.keys())
+        self.limit_table.setCornerButtonEnabled(True)
+
         self.limit_table.setRowCount(len(row_names))
         self.limit_table.setColumnCount(len(self.dic.keys()))
         self.limit_table.setHorizontalHeaderLabels(col_names)
@@ -477,8 +480,6 @@ class LimitTable(QWidget):
                                      QTableWidgetItem("{:0.1e}".format(val[0])))
             self.limit_table.setItem(1, i,
                                      QTableWidgetItem("{:0.1e}".format(val[1])))
-
-        self.limit_table.setCornerButtonEnabled(False)
 
     def update_dic(self):
         self.dic = helpers.read_table(self.limit_table)

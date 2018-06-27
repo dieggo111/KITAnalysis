@@ -1,4 +1,5 @@
 # pylint: disable=R1710, C0413, C0111, E0602, I1101, C0103, R0913, W0401
+import time
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -133,3 +134,9 @@ def set_combo_box(combo_obj, project_list):
     for i, pro in enumerate(project_list):
         combo_obj.addItem("")
         combo_obj.setItemText(i, pro)
+
+def countdown(t):
+    while t:
+        print(t)
+        time.sleep(1)
+        t -= 1
