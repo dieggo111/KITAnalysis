@@ -4,8 +4,10 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from Resources import Logo_rc
 
-class Ui_MainWindow(object):
+class Ui_MainWindow(QtWidgets.QWidget):
     """Initialization of GUI objects and assignment of their values."""
+    def __init__(self):
+        QtWidgets.QWidget.__init__(self)
     def setupUi(self, MainWindow):
         """Initialization of GUI objects, positioning and naming."""
         MainWindow.setObjectName("MainWindow")
@@ -146,7 +148,7 @@ class Ui_MainWindow(object):
         self.logo_2.setObjectName("logo_2")
 
         self.export_button_2 = QtWidgets.QPushButton(self.tab_2)
-        self.export_button_2.setGeometry(QtCore.QRect(840, 440, 131, 91))
+        self.export_button_2.setGeometry(QtCore.QRect(10, 500, 111, 31))
         self.export_button_2.setObjectName("export_button_2")
 
         self.pathBox_tab2 = QtWidgets.QLineEdit(self.tab_2)
@@ -155,7 +157,7 @@ class Ui_MainWindow(object):
         self.pathBox_tab2.setObjectName("pathBox_tab2")
 
         self.result_tab_2 = QtWidgets.QTableWidget(self.tab_2)
-        self.result_tab_2.setGeometry(QtCore.QRect(10, 190, 961, 201))
+        self.result_tab_2.setGeometry(QtCore.QRect(10, 190, 961, 291))
         self.result_tab_2.setMinimumSize(QtCore.QSize(671, 0))
         self.result_tab_2.setObjectName("result_tab_2")
         self.result_tab_2.setRowCount(0)
@@ -171,7 +173,7 @@ class Ui_MainWindow(object):
         self.head_label_tab2.setObjectName("head_label_tab2")
 
         self.updateButton_tab2 = QtWidgets.QPushButton(self.tab_2)
-        self.updateButton_tab2.setGeometry(QtCore.QRect(700, 440, 131, 41))
+        self.updateButton_tab2.setGeometry(QtCore.QRect(160, 500, 111, 31))
         self.updateButton_tab2.setObjectName("updateButton_tab2")
 
         self.value_label_tab2 = QtWidgets.QLabel(self.tab_2)
@@ -187,7 +189,7 @@ class Ui_MainWindow(object):
         self.nameLabel_tab2.setObjectName("nameLabel_tab2")
 
         self.clearButton_tab2 = QtWidgets.QPushButton(self.tab_2)
-        self.clearButton_tab2.setGeometry(QtCore.QRect(700, 490, 131, 41))
+        self.clearButton_tab2.setGeometry(QtCore.QRect(310, 500, 111, 31))
         self.clearButton_tab2.setObjectName("clearButton_tab2")
 
         self.name_box_2 = QtWidgets.QLineEdit(self.tab_2)
@@ -195,40 +197,13 @@ class Ui_MainWindow(object):
         self.name_box_2.setText("")
         self.name_box_2.setObjectName("name_box_2")
 
-        self.limitsLabel_tab2 = QtWidgets.QLabel(self.tab_2)
-        self.limitsLabel_tab2.setGeometry(QtCore.QRect(320, 40, 81, 21))
-        self.limitsLabel_tab2.setObjectName("limitsLabel_tab2")
-
         self.start_button_2 = QtWidgets.QPushButton(self.tab_2)
         self.start_button_2.setGeometry(QtCore.QRect(660, 40, 111, 111))
         self.start_button_2.setObjectName("start_button_2")
 
-        self.limitLabel_tab2 = QtWidgets.QLabel(self.tab_2)
-        self.limitLabel_tab2.setGeometry(QtCore.QRect(10, 410, 51, 21))
-        self.limitLabel_tab2.setObjectName("limitLabel_tab2")
-        self.limitTable = QtWidgets.QTableWidget(self.tab_2)
-        self.limitTable.setGeometry(QtCore.QRect(10, 440, 681, 91))
-        self.limitTable.setObjectName("limitTable")
-        self.limitTable.setColumnCount(6)
-        self.limitTable.setRowCount(2)
-        item = QtWidgets.QTableWidgetItem()
-        self.limitTable.setVerticalHeaderItem(0, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.limitTable.setVerticalHeaderItem(1, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.limitTable.setHorizontalHeaderItem(0, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.limitTable.setHorizontalHeaderItem(1, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.limitTable.setHorizontalHeaderItem(2, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.limitTable.setHorizontalHeaderItem(3, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.limitTable.setHorizontalHeaderItem(4, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.limitTable.setHorizontalHeaderItem(5, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.limitTable.setHorizontalHeaderItem(6, item)
+        self.limit_button_2 = QtWidgets.QPushButton(self.tab_2)
+        self.limit_button_2.setGeometry(QtCore.QRect(460, 500, 111, 31))
+        self.limit_button_2.setObjectName("limit_button_2")
 
         self.para_combo_2 = QtWidgets.QComboBox(self.tab_2)
         self.para_combo_2.setGeometry(QtCore.QRect(320, 70, 111, 22))
@@ -401,7 +376,9 @@ class Ui_MainWindow(object):
         self.add_button_1.setText(_translate("MainWindow", ">> Add to Project"))
         self.startButton.setText(_translate("MainWindow", "Start Search"))
         self.projecLabel1_tab1.setText(_translate("MainWindow", "Project"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_1), _translate("MainWindow", "ALiBaVa Search Tool"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_1),
+                                  _translate("MainWindow",
+                                             "ALiBaVa Search Tool"))
 
         # tab 2
         self.logo_2.setText(_translate("MainWindow", "<html><head/><body><p>"
@@ -414,35 +391,23 @@ class Ui_MainWindow(object):
         self.pathLabel_tab2.setText(_translate("MainWindow", "Output path"))
         self.nameLabel_tab2.setText(_translate("MainWindow", "Sensor Name"))
         self.clearButton_tab2.setText(_translate("MainWindow", "Clear"))
-        self.limitsLabel_tab2.setText(_translate("MainWindow", "Strip Parameter"))
         self.start_button_2.setText(_translate("MainWindow", "Start Search"))
-        self.limitLabel_tab2.setText(_translate("MainWindow", "Limits"))
-        item = self.limitTable.verticalHeaderItem(0)
-        item.setText(_translate("MainWindow", "Lower Limit"))
-        item = self.limitTable.verticalHeaderItem(1)
-        item.setText(_translate("MainWindow", "Upper Limit"))
-        item = self.limitTable.horizontalHeaderItem(0)
-        item.setText(_translate("MainWindow", "R_int"))
-        item = self.limitTable.horizontalHeaderItem(1)
-        item.setText(_translate("MainWindow", "R_poly_dc"))
-        item = self.limitTable.horizontalHeaderItem(2)
-        item.setText(_translate("MainWindow", "I_leak_dc"))
-        item = self.limitTable.horizontalHeaderItem(3)
-        item.setText(_translate("MainWindow", "Pinhole"))
-        item = self.limitTable.horizontalHeaderItem(4)
-        item.setText(_translate("MainWindow", "CC"))
-        item = self.limitTable.horizontalHeaderItem(5)
-        item.setText(_translate("MainWindow", "C_int"))
+        self.limit_button_2.setText(_translate("MainWindow", "Limits"))
+
 
         self.projectLabel_tab2.setText(_translate("MainWindow", "Project"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Strip Mean Calculator"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2),
+                                  _translate("MainWindow",
+                                             "Strip Mean Calculator"))
         self.para_label_2.setText(_translate("MainWindow", "Created by Marius Metzler"))
 
         # tab 3
         self.results_label_3.setText(_translate("MainWindow", "Results"))
         item = self.project_tab_3.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Project Item_3"))
-        self.logo_3.setText(_translate("MainWindow", "<html><head/><body><p><img src=\":/newPrefix/KIT.png\"/></p></body></html>"))
+        self.logo_3.setText(_translate("MainWindow", "<html><head/><body>"
+                                       "<p><img src=\":/newPrefix/KIT.png\"/>"
+                                       "</p></body></html>"))
         self.headLabel_tab3.setText(_translate("MainWindow", "Alpha Calculator"))
         self.pathLabel_tab3.setText(_translate("MainWindow", "Output path"))
         # self.export_button_3.setText(_translate("MainWindow", "Export to File"))
@@ -456,4 +421,6 @@ class Ui_MainWindow(object):
         self.add_button_3.setText(_translate("MainWindow", ">> Add to Project"))
         self.start_button_3.setText(_translate("MainWindow", "Start Search"))
         self.draw_button_3.setText(_translate("MainWindow", "Draw Project"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("MainWindow", "Alpha Calculator"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3),
+                                  _translate("MainWindow",
+                                             "Alpha Calculator"))
