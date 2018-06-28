@@ -32,14 +32,14 @@ class DataGrabber(object):
         data_lst = reshuffle_for_alpha(dic, float(t_vol), float(volume))
         return data_lst
 
-    def strip_search(self, name, project, para, limit_dic):
+    def strip_search(self, name, project, para, limit_dic, pid_list=None):
         """Format data dict according to table specifications.
 
         Returns: [{measurment data for item1}, {measurment data for item2},
                  ...]
         """
         session = KITSearch(self.db_creds)
-        dic = session.probe_search(name, project)
+        dic = session.probe_search(name, project, pid_list)
         if para == "*":
             dic = pop_items(dic, "IVCV", STD_PARAS, STRIP_PARAS)
             data_lst = handle_asterisk(dic)
@@ -49,6 +49,7 @@ class DataGrabber(object):
                 data_lst = reshuffle_for_ramp(dic, para)
             else:
                 data_lst = reshuffle_for_strip(dic)
+        print(data_lst, limit_dic)
         data_lst = get_mean(data_lst, limit_dic)
         return data_lst
 
@@ -90,9 +91,13 @@ def get_mean(data, limit_dic):
     """
     for dic in data:
         corr_lst = []
+        if "_Ramp" in dic["para"]:
+            para = dic["para"].replace("_Ramp", "")
+        else:
+            para = dic["para"]
         for val in dic["data"]:
             try:
-                if limit_dic[dic["para"]][0] < abs(val) < limit_dic[dic["para"]][1]:
+                if limit_dic[para][0] < abs(val) < limit_dic[para][1]:
                     corr_lst.append(val)
             except KeyError:
                 corr_lst.append(val)
@@ -104,6 +109,13 @@ def get_mean(data, limit_dic):
 
 def pop_items(dic, opt, std_meas, strip_meas):
     """Pop unwanted measurements/runs from data dict.
+
+    Args:
+        - opt (str): a) "unanalyzed" deletes unanalyzed alibava runs and old
+                        runs without gain value
+                     b) "IVCV" deletes IV and CV measurements
+                     c) <strip measurement> deletes all other measurements
+                     d) "alpha" deletes measurements without fluence
     """
     del_lst = []
     for sec in dic:

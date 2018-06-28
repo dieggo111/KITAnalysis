@@ -2,6 +2,7 @@
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
+from data_grabber import DataGrabber
 
 def read_table(tab_obj, sort="col"):
     """Reads content of table and puts it in dict.
@@ -122,6 +123,8 @@ def add_header(tab_obj, count, name, hv="horizontal"):
             item.setText(list(name.keys())[col])
         if isinstance(name, list):
             item.setText(name[col])
+        if isinstance(name, str):
+            item.setText(name)
         if hv == "horizontal":
             tab_obj.setHorizontalHeaderItem(col, item)
             adjust_header(tab_obj, count, "Stretch")
@@ -133,3 +136,40 @@ def set_combo_box(combo_obj, project_list):
     for i, pro in enumerate(project_list):
         combo_obj.addItem("")
         combo_obj.setItemText(i, pro)
+
+class SearchData(QtCore.QObject):
+
+    finished = QtCore.pyqtSignal()
+    update_progress = QtCore.pyqtSignal()
+    # set the type of object you are sending
+    results = QtCore.pyqtSignal(list, int)
+
+    def __init__(self, cfg, args):
+    # def __init__(self, parent, cfg, args):
+        super().__init__()
+        self.count = 0
+        self.cfg = cfg
+        self.args = args
+
+    def run(self):
+        # search database here and emit update_progress when appropriate
+        grabber = DataGrabber(self.cfg)
+        # data = []
+        if self.args[0] == 1:
+            data = grabber.alibava_search(self.args[1], self.args[2],
+                                          self.args[3], self.args[4])
+        if self.args[0] == 2:
+            data = grabber.strip_search(self.args[1], self.args[2],
+                                        self.args[3], self.args[4],
+                                        self.args[5])
+        if self.args[0] == 3:
+            data = grabber.alpha_search(self.args[1], self.args[2],
+                                        self.args[3], self.args[4])
+
+
+        # when done, send the results
+        self.send_results(data)
+        self.finished.emit()
+
+    def send_results(self, results):
+        self.results.emit(results, self.args[0])

@@ -1,12 +1,10 @@
 """Globals for KITAnalysis"""
 #pylint: disable=R0903, R0902, C0103
-# import sys
+import sys
 import os
-# from pathlib import Path
-# sys.path.insert(0, Path(os.getcwd()).parents[0])
-# sys.path.insert(0, Path(os.getcwd()).parents[1])
-# print(sys.path)
-from KITPlot.KITConfig import KITConfig
+from pathlib import Path
+sys.path.insert(0, os.path.join(Path(os.getcwd()).parents[0], "KITPlot"))
+from KITConfig import KITConfig
 
 class InitGlobals(object):
     """Class containing several variables providing important values for

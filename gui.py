@@ -143,6 +143,19 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.tab_2 = QtWidgets.QWidget()
         self.tab_2.setObjectName("tab_2")
 
+        self.pid_button_2 = QtWidgets.QPushButton(self.tab_2)
+        self.pid_button_2.setGeometry(QtCore.QRect(320, 130, 111, 21))
+        self.pid_button_2.setObjectName("pid_button_2")
+
+        self.pid_label_tab_2 = QtWidgets.QLabel(self.tab_2)
+        self.pid_label_tab_2.setGeometry(QtCore.QRect(500, 15, 100, 25))
+        self.pid_label_tab_2.setObjectName("pid_label_tab_2")
+
+        self.pid_tab_2 = QtWidgets.QTableWidget(self.tab_2)
+        self.pid_tab_2.setGeometry(QtCore.QRect(500, 40, 111, 111))
+        self.pid_tab_2.setObjectName("pid_tab_2")
+        self.pid_tab_2.setRowCount(0)
+
         self.logo_2 = QtWidgets.QLabel(self.tab_2)
         self.logo_2.setGeometry(QtCore.QRect(810, 20, 171, 111))
         self.logo_2.setObjectName("logo_2")
@@ -204,6 +217,10 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.limit_button_2 = QtWidgets.QPushButton(self.tab_2)
         self.limit_button_2.setGeometry(QtCore.QRect(460, 500, 111, 31))
         self.limit_button_2.setObjectName("limit_button_2")
+
+        self.paraLabel_tab2 = QtWidgets.QLabel(self.tab_2)
+        self.paraLabel_tab2.setGeometry(QtCore.QRect(320, 40, 91, 21))
+        self.paraLabel_tab2.setObjectName("paraLabel_tab2")
 
         self.para_combo_2 = QtWidgets.QComboBox(self.tab_2)
         self.para_combo_2.setGeometry(QtCore.QRect(320, 70, 111, 22))
@@ -393,7 +410,9 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.clearButton_tab2.setText(_translate("MainWindow", "Clear"))
         self.start_button_2.setText(_translate("MainWindow", "Start Search"))
         self.limit_button_2.setText(_translate("MainWindow", "Limits"))
-
+        self.paraLabel_tab2.setText(_translate("MainWindow", "Search Parameter"))
+        self.pid_label_tab_2.setText(_translate("MainWindow", "PID List"))
+        self.pid_button_2.setText(_translate("MainWindow", "Load PID List"))
 
         self.projectLabel_tab2.setText(_translate("MainWindow", "Project"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2),
