@@ -476,8 +476,9 @@ class LoadWin(QWidget):
         with open(fname, 'r') as f:
             data = f.read()
             f.close()
-        pid_list_str = data.split("\n")
+        pid_list_str = [pid for pid in data.split("\n") if pid not in ["", " "]]
         pid_list_int = [int(pid) for pid in pid_list_str]
+        print(pid_list_int, pid_list_str)
         self.querry.emit(pid_list_int)
         self.fill_table(pid_list_str)
 
