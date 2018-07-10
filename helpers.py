@@ -141,7 +141,6 @@ class SearchData(QtCore.QObject):
 
     finished = QtCore.pyqtSignal()
     update_progress = QtCore.pyqtSignal()
-    # set the type of object you are sending
     results = QtCore.pyqtSignal(list, int)
 
     def __init__(self, cfg, args):

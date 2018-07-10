@@ -1,4 +1,4 @@
-# pylint: disable=R1710, C0413, C0111, E0602, I1101, C0103, R0913, W0401, R0902
+# pylint: disable=R1710, C0413, C0111, E0602, I1101, C0103, R0913, W0401, R0902, E0401, W0614, C0301
 import sys
 import os
 from pathlib import Path
@@ -11,7 +11,6 @@ from helpers import *
 # assuming that "KITPlot" is one dir above top level
 sys.path.insert(0, Path(os.getcwd()).parents[0])
 from KITPlot import KITPlot
-
 
 class KITAnalysis(Ui_MainWindow, InitGlobals):
     """Search application for ETP DB.
@@ -153,9 +152,7 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         self.search_data = SearchData(self.db_config, search_paras)
         self.search_data.moveToThread(self.thread)
         self.search_data.results.connect(self.recieve_data)
-        # self.search_data.finished.connect(self.complete)
-        self.search_data.finished.connect(self.thread.quit)
-        self.search_data.finished.connect(self.search_data.deleteLater)
+        self.search_data.finished.connect(self.thread.exit)
         self.thread.finished.connect(self.thread.deleteLater)
         self.thread.started.connect(self.search_data.run)
         self.thread.start()
@@ -478,7 +475,6 @@ class LoadWin(QWidget):
             f.close()
         pid_list_str = [pid for pid in data.split("\n") if pid not in ["", " "]]
         pid_list_int = [int(pid) for pid in pid_list_str]
-        print(pid_list_int, pid_list_str)
         self.querry.emit(pid_list_int)
         self.fill_table(pid_list_str)
 
@@ -508,6 +504,7 @@ class LimitTable(QWidget):
         row_names = ["Lower Limit", "Upper Limit"]
         col_names = list(self.dic.keys())
         self.limit_table.setCornerButtonEnabled(True)
+        self.limit_table.setStyleSheet("QTableCornerButton::section{border-width: 1px; border-color: #BABABA; border-style:solid;}")
 
         self.limit_table.setRowCount(len(row_names))
         self.limit_table.setColumnCount(len(self.dic.keys()))

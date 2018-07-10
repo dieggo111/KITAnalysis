@@ -1,4 +1,4 @@
-# pylint: disable=R1710, C0413, C0111
+# pylint: disable=R1710, C0413, C0111, E0401, R0913
 import sys
 import os
 from pathlib import Path
@@ -49,7 +49,6 @@ class DataGrabber(object):
                 data_lst = reshuffle_for_ramp(dic, para)
             else:
                 data_lst = reshuffle_for_strip(dic)
-        print(data_lst, limit_dic)
         data_lst = get_mean(data_lst, limit_dic)
         return data_lst
 
