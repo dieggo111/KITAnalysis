@@ -64,7 +64,8 @@ class InitGlobals(object):
 
         # accepted projects
         self.projects = ["HPK_2S_I", "HPK_2S_II", "CEC BabyStd", "CEC Bstd",
-                         "CEC BPA", "CEC Badd", "CalibrationDiodes"]
+                         "CEC BPA", "CEC Badd", "CalibrationDiodes",
+                         "NitroStrip"]
 
         # measurement parameters
         self.strip_paras = ["R_int", "R_int_Ramp", "R_poly_dc", "I_leak_dc",
