@@ -38,15 +38,15 @@ class InitGlobals(object):
                         "C_int"    : [0.3e-12, 1.3e-12]}
                 },
                 "DefaultCfgs": {
-                    "SignalVoltage"   : "ALiBaVa_vs_default.cfg",
-                    "SignalAnnealing" : "ALiBaVa_as_default.cfg",
-                    "R_int"           : "Rint_default.cfg",
-                    "C_int"           : "Cint_default.cfg",
-                    "R_poly_dc"       : "Rpoly_default.cfg",
-                    "Pinhole"         : "Pinhole_default.cfg",
-                    "CC"              : "CC_default.cfg",
-                    "I_leak_dc"       : "Ileak_default.cfg",
-                    "Alpha"           : "Alpha_default.cfg"}})
+                    "SignalVoltage"   : "Resources\\ALiBaVa_vs_default.cfg",
+                    "SignalAnnealing" : "Resources\\ALiBaVa_as_default.cfg",
+                    "R_int"           : "Resources\\Rint_default.cfg",
+                    "C_int"           : "Resources\\Cint_default.cfg",
+                    "R_poly_dc"       : "Resources\\Rpoly_default.cfg",
+                    "Pinhole"         : "Resources\\Pinhole_default.cfg",
+                    "CC"              : "Resources\\CC_default.cfg",
+                    "I_leak_dc"       : "Resources\\Ileak_default.cfg",
+                    "Alpha"           : "Resources\\Alpha_default.cfg"}})
             new.write("Settings.cfg")
 
         # load gloabals and default values

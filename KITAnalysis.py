@@ -394,13 +394,11 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
                                 name_lst=self.name_lst_1)
                 kPlot.draw()
             if tab_nr == 3:
-                print(self.project_lst_3)
                 lst = [list(xy_pair.values())[0] for xy_pair in self.project_lst_3]
                 kPlot = KITPlot(lst,
                                 defaultCfg=self.defaultCfgDic["Alpha"],
                                 name=cfgName,
                                 name_lst=self.name_lst_3)
-                print(lst)
                 f, t = kPlot.get_fit(lst)
                 kPlot.draw()
                 fig = kPlot.getCanvas()
