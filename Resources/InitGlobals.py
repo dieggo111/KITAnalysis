@@ -1,5 +1,5 @@
 """Globals for KITAnalysis"""
-#pylint: disable=R0903, R0902, C0103
+#pylint: disable=R0903, R0902, C0103, E0401, C0413
 import sys
 import os
 from pathlib import Path
@@ -65,7 +65,7 @@ class InitGlobals(object):
         # accepted projects
         self.projects = ["HPK_2S_I", "HPK_2S_II", "CEC BabyStd", "CEC Bstd",
                          "CEC BPA", "CEC Badd", "CalibrationDiodes",
-                         "NitroStrip"]
+                         "NitroStrip", "HPK_2S_III"]
 
         # measurement parameters
         self.strip_paras = ["R_int", "R_int_Ramp", "R_poly_dc", "I_leak_dc",

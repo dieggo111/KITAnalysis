@@ -126,6 +126,8 @@ def pop_items(dic, opt, std_meas, strip_meas):
             del_lst.append(sec)
         elif opt == "alpha" and dic[sec]["fluence"] == 0:
             del_lst.append(sec)
+        elif dic[sec]["flag"] == "bad":
+            del_lst.append(sec)
     for run in del_lst:
         dic.pop(run)
     return dic

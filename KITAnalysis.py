@@ -8,6 +8,8 @@ from PyQt5.QtGui import *
 from Resources.InitGlobals import InitGlobals
 from gui import Ui_MainWindow
 from helpers import *
+from Widgets.LoadWin import LoadWin
+from Widgets.LimitTable import LimitTable
 # assuming that "KITPlot" is one dir above top level
 sys.path.insert(0, Path(os.getcwd()).parents[0])
 from KITPlot import KITPlot
@@ -122,7 +124,7 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
 
 
     def start_search(self, tab):
-        """Executed when the start button is hit.Data are visualized by
+        """Executed when the start button is hit. Data are visualized by
         writing them into GUI table.
         """
         self.clear(tab)
@@ -148,13 +150,12 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
 
         self.statusbar.showMessage("Searching...")
 
-        self.thread = QtCore.QThread()
+        self.thread = QtCore.QThread(self)
         self.search_data = SearchData(self.db_config, search_paras)
-        self.search_data.moveToThread(self.thread)
         self.search_data.results.connect(self.recieve_data)
-        self.search_data.finished.connect(self.thread.exit)
         self.thread.finished.connect(self.thread.deleteLater)
         self.thread.started.connect(self.search_data.run)
+        self.search_data.moveToThread(self.thread)
         self.thread.start()
 
 
@@ -277,10 +278,9 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
             x = [x for x in range(0, len(dic["data"]))]
             y = dic["data"]
 
-        kPlot = KITPlot([(x, y)],
-                        defaultCfg=os.path.join(self.defaultCfgDic\
-                                   [dic["para"].replace("_Ramp", "")]),
-                        name=dic["para"].replace("_Ramp", ""))
+        kPlot = KITPlot(defaultCfg=os.path.join(self.defaultCfgDic\
+                                   [dic["para"].replace("_Ramp", "")]))
+        kPlot.addFiles([(x, y)], name=dic["para"].replace("_Ramp", ""))
         kPlot.draw()
         # kPlot.saveCanvas()
         kPlot.showCanvas()
@@ -381,25 +381,19 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         try:
             if tab_nr == 1 and self.para_combo_1.currentText() == "Voltage":
                 lst = [list(dic.values())[0] for dic in self.project_lst_1]
-                kPlot = KITPlot(lst,
-                                defaultCfg=self.defaultCfgDic["SignalVoltage"],
-                                name=cfgName,
-                                name_lst=self.name_lst_1)
+                kPlot = KITPlot(defaultCfg=self.defaultCfgDic["SignalVoltage"])
+                kPlot.addFiles(lst, name=cfgName, name_lst=self.name_lst_1)
                 kPlot.draw()
             if tab_nr == 1 and self.para_combo_1.currentText() == "Annealing":
                 lst = [list(dic.values())[0] for dic in self.project_lst_1]
-                kPlot = KITPlot(lst,
-                                defaultCfg=self.defaultCfgDic["SignalAnnealing"],
-                                name=cfgName,
-                                name_lst=self.name_lst_1)
+                kPlot = KITPlot(defaultCfg=self.defaultCfgDic["SignalAnnealing"])
+                kPlot.addFiles(lst, name=cfgName, name_lst=self.name_lst_1)
                 kPlot.draw()
             if tab_nr == 3:
                 lst = [list(xy_pair.values())[0] for xy_pair in self.project_lst_3]
-                kPlot = KITPlot(lst,
-                                defaultCfg=self.defaultCfgDic["Alpha"],
-                                name=cfgName,
-                                name_lst=self.name_lst_3)
+                kPlot = KITPlot(defaultCfg=self.defaultCfgDic["Alpha"])
                 f, t = kPlot.get_fit(lst)
+                kPlot.addFiles(lst, name=cfgName, name_lst=self.name_lst_3)
                 kPlot.draw()
                 fig = kPlot.getCanvas()
                 kPlot.addLodger(fig, f, t)
@@ -455,77 +449,6 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
 
     def set_pid_list(self, lst):
         self.pid_list = lst
-
-class LoadWin(QWidget):
-    querry = QtCore.pyqtSignal(list)
-    def __init__(self, tab_obj):
-        # super().___init(self)
-        QWidget.__init__(self)
-
-        self.setWindowTitle("LoadWin")
-        self.setGeometry(QtCore.QRect(400, 400, 700, 200))
-        self.tab = tab_obj
-        add_header(self.tab, 1, "PID")
-
-    def getfile(self):
-        fname = QFileDialog.getOpenFileName(self, 'Open file',
-                                            'c:\\', "Image files (*.txt)")[0]
-        with open(fname, 'r') as f:
-            data = f.read()
-            f.close()
-        pid_list_str = [pid for pid in data.split("\n") if pid not in ["", " "]]
-        pid_list_int = [int(pid) for pid in pid_list_str]
-        self.querry.emit(pid_list_int)
-        self.fill_table(pid_list_str)
-
-    def fill_table(self, lst):
-        for item in lst:
-            row = self.tab.rowCount()
-            self.tab.insertRow(row)
-            tab_item = QTableWidgetItem(item)
-            self.tab.setItem(row, 0, tab_item)
-
-class LimitTable(QWidget):
-    querry = QtCore.pyqtSignal(dict)
-    def __init__(self, dic):
-        # super().___init(self)
-        QWidget.__init__(self)
-        self.dic = dic
-
-        self.setWindowTitle("Limit Table")
-        self.limit_table = QtWidgets.QTableWidget(self)
-        self.setGeometry(QtCore.QRect(400, 400, 700, 200))
-        self.limit_table.setGeometry(QtCore.QRect(10, 40, 681, 81))
-        self.setup_table()
-        self.limit_table.itemChanged.connect(self.update_dic)
-
-    def setup_table(self):
-
-        row_names = ["Lower Limit", "Upper Limit"]
-        col_names = list(self.dic.keys())
-        self.limit_table.setCornerButtonEnabled(True)
-        self.limit_table.setStyleSheet("QTableCornerButton::section{border-width: 1px; border-color: #BABABA; border-style:solid;}")
-
-        self.limit_table.setRowCount(len(row_names))
-        self.limit_table.setColumnCount(len(self.dic.keys()))
-        self.limit_table.setHorizontalHeaderLabels(col_names)
-
-        add_header(self.limit_table, len(row_names),
-                   row_names, "vertical")
-        add_header(self.limit_table, len(col_names), col_names)
-
-        for i, val in enumerate(self.dic.values()):
-            self.limit_table.setItem(0, i,
-                                     QTableWidgetItem("{:0.1e}".format(val[0])))
-            self.limit_table.setItem(1, i,
-                                     QTableWidgetItem("{:0.1e}".format(val[1])))
-
-    def update_dic(self):
-        self.dic = read_table(self.limit_table)
-        self.send_table()
-
-    def send_table(self):
-        self.querry.emit(self.dic)
 
 
 
