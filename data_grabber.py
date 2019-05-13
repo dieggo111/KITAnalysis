@@ -12,7 +12,7 @@ STRIP_PARAS = ["R_int", "R_int_Ramp", "R_poly_dc", "I_leak_dc",
                "C_int", "CC", "Pinhole", "C_int_Ramp"]
 STD_PARAS = ["C_tot", "I_tot"]
 
-class DataGrabber(object):
+class DataGrabber():
     """Grab data dict and convert/format it according to specifications of app.
     """
     def __init__(self, credentials):
@@ -140,27 +140,43 @@ def reshuffle_for_alpha(data, tar_volt, volume):
     Returns: [{measurment data for v_bais1}, {measurment data for v_bais2}, ...]
     """
     data_lst = []
-
-    curr_0_dict = find_curr_in_dict(data, tar_volt, False)
-    curr_dict = find_curr_in_dict(data, tar_volt, True)
     for sec in data:
         if data[sec]["fluence"] != 0:
-            data_lst.append({"name" : data[sec]["name"],
-                             "voltage" : tar_volt,
-                             "I_0@V" : curr_0_dict[data[sec]["name"]][0],
-                             "I_norm@V" : norm_curr(\
-                                    curr_dict[data[sec]["name"]][0],
-                                    volume,
-                                    curr_dict[data[sec]["name"]][1],
-                                    curr_0_dict[data[sec]["name"]][0]),
-                             "I@V" : curr_dict[data[sec]["name"]][0],
-                             "pid" : data[sec]["PID"],
-                             "para" : data[sec]["paraY"],
-                             "annealing" : format_ann(data[sec]["annealing"]),
-                             "fluence" : format_flu_par(\
-                                    data[sec]["fluence"],
-                                    data[sec]["particletype"])})
+            # curr_0_dict = find_curr_in_dict(data[sec], sec, tar_volt, False)
+            curr_dict = find_curr_in_dict(data[sec], sec, tar_volt, True)
+            if curr_dict != {}:
+                data_lst.append({"name" : data[sec]["name"],
+                                 "voltage" : tar_volt,
+                                 "flag" : data[sec]["flag"],
+                                 "I@V" : curr_dict[sec][0],
+                                 "temp" : curr_dict[sec][1],
+                                 "pid" : data[sec]["PID"],
+                                 "para" : data[sec]["paraY"],
+                                 "annealing" : format_ann(data[sec]["annealing"]),
+                                 "fluence" : format_flu_par(\
+                                        data[sec]["fluence"],
+                                        data[sec]["particletype"])})
+    curr_0_dict = find_0_curr(data, \
+        [dic["name"] \
+        for dic in data_lst], tar_volt)
+    for data_item in data_lst:
+        if data_item["name"] in curr_0_dict:
+            data_item["I_0@V"] = curr_0_dict[data_item["name"]][0]
+            data_item["I_norm@V"] = norm_curr(data_item["I@V"],
+                                              volume,
+                                              data_item["temp"],
+                                              data_item["I_0@V"])
     return data_lst
+
+def find_0_curr(data, key_lst, tar_volt):
+    """Returns latest current value at target voltage for each
+    different sensor in key_lst"""
+    dic = {}
+    for sec in data:
+        if data[sec]["fluence"] == 0 and data[sec]["name"] in key_lst:
+            dic[data[sec]["name"]] = find_curr(
+                data[sec]["dataX"], data[sec]["dataY"], data[sec]["temp"], False, tar_volt)
+    return dic
 
 def reshuffle_for_alibava(data):
     """Reshuffels data dict for ramp measurements in order to meet
@@ -248,39 +264,14 @@ def get_ramp_data(ass_lst, volt_lst, data_dict):
                             data_dict[pid]["dataZ"].index(volt)]]
     return v_r_dict
 
-def find_curr_in_dict(data, tar_volt, irr):
-    """Find current value at target voltage before irradiation of specific
-    sensor"""
+def find_curr_in_dict(data, key, tar_volt, irr):
+    """Find current value at target voltage in a dict. Returns empty dict if
+    search was unsuccessful."""
     dic = {}
-    for sec in data:
-        if irr is False:
-            if data[sec]["fluence"] == 0 and data[sec]["flag"] == "valid":
-                dic[data[sec]["name"]] = find_curr(data[sec]["dataX"],
-                                                   data[sec]["dataY"],
-                                                   data[sec]["temp"],
-                                                   irr,
-                                                   tar_volt)
-            elif data[sec]["fluence"] == 0 and data[sec]["flag"] == "good" \
-                    and data[sec]["name"] not in dic.keys():
-                dic[data[sec]["name"]] = find_curr(data[sec]["dataX"],
-                                                   data[sec]["dataY"],
-                                                   data[sec]["temp"],
-                                                   irr,
-                                                   tar_volt)
-        else:
-            if not data[sec]["fluence"] == 0 and data[sec]["flag"] == "valid":
-                dic[data[sec]["name"]] = find_curr(data[sec]["dataX"],
-                                                   data[sec]["dataY"],
-                                                   data[sec]["temp"],
-                                                   irr,
-                                                   tar_volt)
-            elif not data[sec]["fluence"] == 0 and data[sec]["flag"] == "good" \
-                    and data[sec]["name"] not in dic.keys():
-                dic[data[sec]["name"]] = find_curr(data[sec]["dataX"],
-                                                   data[sec]["dataY"],
-                                                   data[sec]["temp"],
-                                                   irr,
-                                                   tar_volt)
+    curr_temp = find_curr(
+        data["dataX"], data["dataY"], data["temp"], irr, tar_volt)
+    if curr_temp is not False:
+        dic[key] = curr_temp
     return dic
 
 def find_curr(datax, datay, datat, irr, tar_volt):
@@ -305,7 +296,7 @@ def find_curr(datax, datay, datat, irr, tar_volt):
                 return (y_val, temp_val)
             if irr is False and (temp*0.95) < temp_val < (temp*1.05):
                 return (y_val, temp_val)
-    return 0
+    return False
 
 def format_flu_par(flu, par):
     """Create a string containing fluence and particletype.

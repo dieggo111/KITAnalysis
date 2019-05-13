@@ -101,7 +101,9 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         mainly used for debbuging.
         """
         self.valueBox_tab1.setText("600")
-        self.name_box_1.setText("KIT_Test_07")
+        self.name_box_1.setText("FZ290_30_Irradiation")
+        self.project_combo_1.setCurrentIndex(self.project_combo_1.findText(\
+            "HPK_2S_III", QtCore.Qt.MatchFixedString))
         self.path_box_1.setText(self.outputPath)
         self.project_box_1.setText("NewProject")
         # self.name_box_2.setText("No_Pstop_06")
@@ -112,15 +114,15 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
             "R_int_Ramp", QtCore.Qt.MatchFixedString))
         self.pathBox_tab2.setText(self.outputPath)
 
-        self.voltage_box.setText("300")
+        self.voltage_box.setText("600")
         # self.name_box_3.setText("FBK_W%")
-        self.name_box_3.setText("FBK_W5%")
+        self.name_box_3.setText("FZ290_11_Baby")
         self.path_box_3.setText(self.outputPath)
         self.project_box_3.setText("AlphaPlot")
-        self.volume_box.setText("0.01125")
+        self.volume_box.setText("0.16688")
         self.project_combo_3.setCurrentIndex(self.project_combo_3.findText(\
-            "CalibrationDiodes", QtCore.Qt.MatchFixedString))
-        self.tabWidget.setCurrentIndex(1)
+            "HPK_2S_III", QtCore.Qt.MatchFixedString))
+        self.tabWidget.setCurrentIndex(2)
 
 
     def start_search(self, tab):
@@ -197,7 +199,7 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
             ass_dict = self.tab3
             name = self.name_box_3.text()
             project = self.project_combo_3.currentText()
-            add_checkbox(tab, row_position, self.tab3["obj"])
+            add_checkbox(tab, row_position, self.tab3["obj"], False)
             self.result_tab_3.setColumnWidth(self.tab3["obj"], 47)
 
         for col in ass_dict:
@@ -363,8 +365,7 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
 
     def draw(self, tab_nr):
         """ projectList contains lists for each graph to be drawn looking like
-            [voltage,annealing,seed]
-        """
+            [voltage, annealing, seed]"""
         # check if there's already a cfg file with the same name (this is
         # causing a lot of problems because of the entryList in cfg file)
         if tab_nr == 1:
@@ -381,22 +382,27 @@ class KITAnalysis(Ui_MainWindow, InitGlobals):
         try:
             if tab_nr == 1 and self.para_combo_1.currentText() == "Voltage":
                 lst = [list(dic.values())[0] for dic in self.project_lst_1]
-                kPlot = KITPlot(defaultCfg=self.defaultCfgDic["SignalVoltage"])
+                kPlot = KITPlot(
+                    defaultCfg=self.defaultCfgDic["SignalAnnealing"],
+                    auto_labeling=False)
                 kPlot.addFiles(lst, name=cfgName, name_lst=self.name_lst_1)
                 kPlot.draw()
             if tab_nr == 1 and self.para_combo_1.currentText() == "Annealing":
                 lst = [list(dic.values())[0] for dic in self.project_lst_1]
-                kPlot = KITPlot(defaultCfg=self.defaultCfgDic["SignalAnnealing"])
+                kPlot = KITPlot(
+                    defaultCfg=self.defaultCfgDic["SignalVoltage"],
+                    auto_labeling=False)
                 kPlot.addFiles(lst, name=cfgName, name_lst=self.name_lst_1)
                 kPlot.draw()
             if tab_nr == 3:
                 lst = [list(xy_pair.values())[0] for xy_pair in self.project_lst_3]
-                kPlot = KITPlot(defaultCfg=self.defaultCfgDic["Alpha"])
+                kPlot = KITPlot(
+                    defaultCfg=self.defaultCfgDic["Alpha"], auto_labeling=False)
                 f, t = kPlot.get_fit(lst)
                 kPlot.addFiles(lst, name=cfgName, name_lst=self.name_lst_3)
                 kPlot.draw()
                 fig = kPlot.getCanvas()
-                kPlot.addLodger(fig, f, t)
+                kPlot.addLodger(fig, t, f)
 
             kPlot.showCanvas(save=True)
         except TypeError:

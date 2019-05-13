@@ -62,7 +62,7 @@ def is_checked(tab, col):
             item_list.append(i)
     return item_list
 
-def add_checkbox(tab_obj, row_nr, col_nr):
+def add_checkbox(tab_obj, row_nr, col_nr, state=True):
     """Add a checked checkbox in the center of cell of specific row.
     """
     p_widget = QWidget()
@@ -71,7 +71,7 @@ def add_checkbox(tab_obj, row_nr, col_nr):
     p_layout.addWidget(p_checkbox)
     p_layout.setAlignment(QtCore.Qt.AlignCenter)
     p_layout.setContentsMargins(0, 0, 0, 0)
-    p_checkbox.setCheckState(QtCore.Qt.Checked)
+    p_checkbox.setCheckState(QtCore.Qt.Checked if state else QtCore.Qt.Unchecked)
     add_col(tab_obj, col_nr)
     tab_obj.setCellWidget(row_nr, col_nr, p_widget)
     adjust_header(tab_obj, col_nr, "Stretch")

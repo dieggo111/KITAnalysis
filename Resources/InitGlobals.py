@@ -33,7 +33,7 @@ class InitGlobals(object):
                         "R_int"    : [1e8, 1e13],
                         "R_poly_dc": [1e5, 3e6],
                         "I_leak_dc": [0.01e-9, 1e-9],
-                        "Pinhole"  : [0, 8e12],
+                        "Pinhole"  : [0, 8e-12],
                         "CC"       : [20e-12, 70e-12],
                         "C_int"    : [0.3e-12, 1.3e-12]}
                 },
@@ -65,7 +65,7 @@ class InitGlobals(object):
         # accepted projects
         self.projects = ["HPK_2S_I", "HPK_2S_II", "CEC BabyStd", "CEC Bstd",
                          "CEC BPA", "CEC Badd", "CalibrationDiodes",
-                         "NitroStrip", "HPK_2S_III"]
+                         "NitroStrip", "HPK_2S_III", "HPK_2S_IV"]
 
         # measurement parameters
         self.strip_paras = ["R_int", "R_int_Ramp", "R_poly_dc", "I_leak_dc",
